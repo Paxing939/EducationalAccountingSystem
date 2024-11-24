@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: students_db
+    ports:
+      - "5432:5432"
+
+  students_service:
+    build:
+      context: ./students_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres/students_db
+
+  professions_service:
+    build:
+      context: ./professions_service
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres/students_db
