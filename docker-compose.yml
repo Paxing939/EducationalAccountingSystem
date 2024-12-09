@@ -1,31 +1,37 @@
 version: '3.9'
 
 services:
-  postgres:
+  postgres_db:
     image: postgres:13
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: students_db
     ports:
-      - "5432:5432"
+      - "5443:5432"
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
 
   students_service:
     build:
-      context: ./students_service
+      context: ./students
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      - postgres_db
     environment:
-      DATABASE_URL: postgresql://user:password@postgres/students_db
+      DATABASE_URL: postgresql://user:password@postgres_db:5443/students_db
 
-  professions_service:
-    build:
-      context: ./professions_service
-    ports:
-      - "8001:8001"
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgresql://user:password@postgres/students_db
+#  professions_service:
+#    build:
+#      context: ./professions
+#    ports:
+#      - "8001:8001"
+#    depends_on:
+#      - postgres_db
+#    environment:
+#      DATABASE_URL: postgresql://user:password@postgres_db/students_db
+
+volumes:
+  postgres_db:
+    driver: local

@@ -10,4 +10,4 @@ COPY . /app
 WORKDIR /app
 
 # Команда для запуска приложения
-CMD ["uvicorn", "professions_service:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "students_service:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
