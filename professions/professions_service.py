@@ -4,7 +4,7 @@ from sqlalchemy import Float, create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql://user:password@postgres_db:5432/educational_db"
+DATABASE_URL = "postgresql://user:password@postgres_db:5432/students_db"
 
 Base = declarative_base()
 engine = create_engine(DATABASE_URL)
@@ -47,10 +47,7 @@ class ProfessionCreate(ProfessionBase):
 @app.post("/professions/create")
 def create_profession(profession: ProfessionCreate):
     db = SessionLocal()
-    db_profession = Profession(name=profession.name,
-                               train_1=profession.train_1, train_2=profession.train_2, train_3=profession.train_3, train_4=profession.train_4,
-                               retrain_1=profession.retrain_1, retrain_2=profession.retrain_2, retrain_3=profession.retrain_3, retrain_4=profession.retrain_4,
-                               advancement=profession.advancement)
+    db_profession = Profession(**profession.dict())
     db.add(db_profession)
     db.commit()
     db.refresh(db_profession)
