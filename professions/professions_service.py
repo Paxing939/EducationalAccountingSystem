@@ -30,8 +30,7 @@ class Profession(Base):
 Base.metadata.create_all(bind=engine)
 
 
-class ProfessionCreate(BaseModel):
-    name: str
+class ProfessionBase(BaseModel):
     train_1: float | None = None
     train_2: float | None = None
     train_3: float | None = None
@@ -42,8 +41,10 @@ class ProfessionCreate(BaseModel):
     retrain_4: float | None = None
     advancement: float | None = None
 
+class ProfessionCreate(ProfessionBase):
+    name: str
 
-@app.post("/professions/")
+@app.post("/professions/create")
 def create_profession(profession: ProfessionCreate):
     db = SessionLocal()
     db_profession = Profession(name=profession.name,
@@ -51,6 +52,31 @@ def create_profession(profession: ProfessionCreate):
                                retrain_1=profession.retrain_1, retrain_2=profession.retrain_2, retrain_3=profession.retrain_3, retrain_4=profession.retrain_4,
                                advancement=profession.advancement)
     db.add(db_profession)
+    db.commit()
+    db.refresh(db_profession)
+    return db_profession
+
+class ProfessionUpdate(ProfessionBase):
+    id: int
+    name: str | None = None
+
+@app.post("/professions/edit")
+def edit_profession(profession: ProfessionUpdate):
+    db = SessionLocal()
+    db_profession = db.query(Profession).filter(Profession.id == profession.id).first()
+    if db_profession is None:
+        raise HTTPException(status_code=400, detail="Profession not found")
+    if profession.name:
+        db_profession.name = profession.name
+    db_profession.train_1 = profession.train_1
+    db_profession.train_2 = profession.train_2
+    db_profession.train_3 = profession.train_3
+    db_profession.train_4 = profession.train_4
+    db_profession.retrain_1 = profession.retrain_1
+    db_profession.retrain_2 = profession.retrain_2
+    db_profession.retrain_3 = profession.retrain_3
+    db_profession.retrain_4 = profession.retrain_4
+    db_profession.advancement = profession.advancement
     db.commit()
     db.refresh(db_profession)
     return db_profession
