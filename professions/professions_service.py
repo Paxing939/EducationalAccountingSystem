@@ -3,8 +3,12 @@ from pydantic import BaseModel
 from sqlalchemy import Float, create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = "postgresql://user:password@postgres_db:5432/students_db"
+if 'DATABASE_URL' not in os.environ:
+    raise Exception('DATABASE_URL environment variable is not set')
+
+DATABASE_URL = os.environ['DATABASE_URL']
 
 Base = declarative_base()
 engine = create_engine(DATABASE_URL)

@@ -30,7 +30,7 @@ services:
    depends_on:
      - postgres_db
    environment:
-     DATABASE_URL: postgresql://user:password@postgres_db/educational_db
+     DATABASE_URL: postgresql://user:password@postgres_db/students_db
 
 volumes:
   postgres_db:
