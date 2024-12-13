@@ -21,7 +21,16 @@ services:
       - postgres_db
     environment:
       DATABASE_URL: postgresql://user:password@postgres_db:5443/students_db
-
+  #########
+  auth_service:
+    build:
+      context: ./auth
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres_db
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres_db:5443/students_db
 #  professions_service:
 #    build:
 #      context: ./professions
