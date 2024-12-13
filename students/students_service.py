@@ -90,7 +90,7 @@ class StudentCreate(BaseModel):
 
 
 def authenticate_user(token: str):
-    auth_service_url = "http://auth_service/verify-token"
+    auth_service_url = "http://auth_service:8002/verify-token"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(auth_service_url, headers=headers)
     if response.status_code != 200:

@@ -2,7 +2,9 @@ FROM python:3.10-slim
 
 # Установить зависимости
 RUN pip install fastapi sqlalchemy psycopg2-binary uvicorn
-
+RUN pip install requests
+RUN pip install authx
+#RUN pip install --no-cache-dir -r requirements.txt
 # Скопировать файлы приложения
 COPY . /app
 
