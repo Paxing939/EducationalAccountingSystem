@@ -1,6 +1,7 @@
+import requests
 i = 2
 if i == 0:
-    import requests
+    #import requests
 
     url = "http://localhost:8000/students/"
     payload = {
@@ -12,7 +13,6 @@ if i == 0:
     headers = {
         "Content-Type": "application/json"
     }
-
     response = requests.post(url, json=payload, headers=headers)
 
     if response.status_code == 200:
@@ -37,20 +37,18 @@ elif i == 1:
     cur.close()
     conn.close()
 elif i == 2:
-    import requests
 
     url = "http://localhost:8002/login"
     payload = {
-        "username": "Denis",
-        "password" : "123456"
+        "username": "Ivan",
+        "password" : "5432"
     }
     headers = {
         "Content-Type": "application/json"
     }
-
     response = requests.post(url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Student created successfully:", response.json())
+        print("current_user:", response.json())
     else:
-        print("Failed to create student:", response.status_code, response.text)
+        print("Failed to enter:", response.status_code, response.text)

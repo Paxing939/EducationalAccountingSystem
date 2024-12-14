@@ -7,9 +7,9 @@ RUN pip install authx
 #RUN pip install --no-cache-dir -r requirements.txt
 # Скопировать файлы приложения
 COPY . /app
-
+COPY . /testLoginsAndPasswords.txt
 # Перейти в директорию приложения
 WORKDIR /app
 
 # Команда для запуска приложения
-CMD ["uvicorn", "auth_service:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "auth_service:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
