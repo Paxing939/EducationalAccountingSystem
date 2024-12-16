@@ -1,11 +1,9 @@
 import requests
-i = 2
+i = 3
 if i == 0:
-    #import requests
-
     url = "http://localhost:8000/students/"
     payload = {
-        "name": "John Doe",
+        "name": "Ivan",
         "age": 22,
         "education_type": 1,
         "profession_id": 101
@@ -47,8 +45,29 @@ elif i == 2:
         "Content-Type": "application/json"
     }
     response = requests.post(url, json=payload, headers=headers)
-
+    data = response.json()
     if response.status_code == 200:
-        print("current_user:", response.json())
+        print("current_user:", response.json().get("access_token"))
     else:
         print("Failed to enter:", response.status_code, response.text)
+
+elif i == 3:
+
+    # URL для аутентификации
+    auth_url = "http://localhost:8002/login"
+    auth_payload = {
+        "username": "Ivan",
+        "password": "5432"
+    }
+    auth_headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Отправка запроса на аутентификацию
+    auth_response = requests.post(auth_url, json=auth_payload, headers=auth_headers)
+
+    # Проверка ответа
+    if auth_response.status_code == 200:
+        auth_data = auth_response.json()
+        token = auth_data.get("access_token")
+        print(f"Token: {token}")

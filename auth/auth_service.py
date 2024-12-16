@@ -9,7 +9,7 @@ config.JWT_ACCESS_COOKIE_NAME = "my_access_token"
 config.JWT_TOKEN_LOCATION = ["cookies"]
 
 security = AuthX(config=config)
-
+token = ""
 class UserLoginSchema(BaseModel):
     username: str
     password: str
@@ -30,6 +30,5 @@ def login(creds: UserLoginSchema, response: Response):
     raise HTTPException(status_code=401, detail="Неверный логин или пароль.")
 
 @app.get("/protected", dependencies=[Depends(security.access_token_required)])
-def protected(Authorize: AuthX = Depends()):
-    current_user = Authorize.get_jwt_subject()
-    return {"user": current_user}
+def protected():
+    return True

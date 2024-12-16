@@ -1,9 +1,9 @@
 FROM python:3.10-slim
 
 # Установить зависимости
-RUN pip install fastapi sqlalchemy psycopg2-binary uvicorn
+RUN pip install fastapi sqlalchemy uvicorn
 RUN pip install requests
-
+RUN pip install psycopg2-binary
 # Скопировать файлы приложения
 COPY . /app
 
