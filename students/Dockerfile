@@ -1,14 +1,14 @@
 FROM python:3.10-slim
 
-# Установить зависимости
-RUN pip install fastapi sqlalchemy uvicorn
-RUN pip install requests
-RUN pip install psycopg2-binary
-# Скопировать файлы приложения
-COPY . /app
-
-# Перейти в директорию приложения
+# Set the working directory to /app
 WORKDIR /app
 
-# Команда для запуска приложения
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files to the container
+COPY . .
+
+# Application startup command
 CMD ["uvicorn", "students_service:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
