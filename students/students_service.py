@@ -1,17 +1,11 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from pydantic import BaseModel
-<<<<<<< HEAD
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import declarative_base
-import requests
-=======
 from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import date
->>>>>>> bbc946f (First full students service implementation)
+import requests
 
 db_name = 'students_db'
 db_user = 'user'
@@ -74,14 +68,6 @@ class StudentPayment(BaseModel):
     date: date
     amount: float
 
-<<<<<<< HEAD
-class StudentCreate(BaseModel):
-    name: str
-    age: int
-    education_type: int
-    # profession_id: int
-token = ""
-=======
 class StudentBase(BaseModel):
     referrer_organization: str | None = None
     theory_end_date: date | None = None
@@ -119,7 +105,6 @@ class StudentCreate(StudentBase):
     protocol_number: str
     full_name_bel: str
     profession_bel: str
->>>>>>> bbc946f (First full students service implementation)
 
 def authenticate_user(username: str, password: str):
     auth_service_url = "http://auth_service:8002/login"
@@ -139,18 +124,12 @@ def authenticate_user(username: str, password: str):
 @app.post("/students/create")
 def create_student(student: StudentCreate):
     db = SessionLocal()
-<<<<<<< HEAD
-    db_student = Student(name=student.name, age=student.age)  # , profession_id=student.profession_id)
-=======
     student.payments = [payment.model_dump(mode='json') for payment in student.payments]
     db_student = Student(**student.dict())
->>>>>>> bbc946f (First full students service implementation)
     db.add(db_student)
     db.commit()
     db.refresh(db_student)
     return db_student
-<<<<<<< HEAD
-=======
 
 class StudentUpdate(StudentBase):
     id: int
@@ -226,4 +205,3 @@ def edit_student(student: StudentUpdate):
     db.commit()
     db.refresh(db_student)
     return db_student
->>>>>>> bbc946f (First full students service implementation)
