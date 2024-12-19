@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY
+from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +22,15 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 app = FastAPI()
 
+class EducationType(Base):
+    __tablename__ = "education_types"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(256))
+
+class Education(Base):
+    __tablename__ = "educations"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(256))
 
 class Student(Base):
     __tablename__ = "students"
@@ -38,11 +47,11 @@ class Student(Base):
     exam_date = Column(Date, nullable=True)
     profession = Column(String(256))
     category = Column(Integer)
-    education_type = Column(String(128))
+    education_type_id = Column(Integer, ForeignKey(EducationType.id))
     login = Column(String(128))
     email = Column(String(128), nullable=True)
     birth_date = Column(Date)
-    education = Column(String(128))
+    education_id = Column(Integer, ForeignKey(Education.id))
     previous_profession = Column(String(256), nullable=True)
     payment = Column(Float)
     organization = Column(String(256), nullable=True)
@@ -97,10 +106,10 @@ class StudentCreate(StudentBase):
     start_date: date
     profession: str
     category: int
-    education_type: str
+    education_type_id: int
     login: str
     birth_date: date
-    education: str
+    education_id: int
     payment: float
     protocol_number: str
     full_name_bel: str
@@ -124,6 +133,10 @@ def authenticate_user(username: str, password: str):
 @app.post("/students/create")
 def create_student(student: StudentCreate):
     db = SessionLocal()
+    if db.query(EducationType).filter(EducationType.id == student.education_type_id).first() is None:
+        raise HTTPException(status_code=400, detail="Invalid education type id")
+    if db.query(Education).filter(Education.id == student.education_id).first() is None:
+        raise HTTPException(status_code=400, detail="Invalid education id")
     student.payments = [payment.model_dump(mode='json') for payment in student.payments]
     db_student = Student(**student.dict())
     db.add(db_student)
@@ -139,10 +152,10 @@ class StudentUpdate(StudentBase):
     start_date: date | None = None
     profession: str | None = None
     category: int | None = None
-    education_type: str | None = None
+    education_type_id: int | None = None
     login: str | None = None
     birth_date: date | None = None
-    education: str | None = None
+    education_id: int | None = None
     payment: float | None = None
     protocol_number: str | None = None
     full_name_bel: str | None = None
@@ -166,14 +179,18 @@ def edit_student(student: StudentUpdate):
         db_student.profession = student.profession
     if student.category:
         db_student.category = student.category
-    if student.education_type:
-        db_student.education_type = student.education_type
+    if student.education_type_id:
+        if db.query(EducationType).filter(EducationType.id == student.education_type_id).first() is None:
+            raise HTTPException(status_code=400, detail="Invalid education type id")
+        db_student.education_type_id = student.education_type_id
     if student.login:
         db_student.login = student.login
     if student.birth_date:
         db_student.birth_date = student.birth_date
-    if student.education:
-        db_student.education = student.education
+    if student.education_id:
+        if db.query(Education).filter(Education.id == student.education_id).first() is None:
+            raise HTTPException(status_code=400, detail="Invalid education id")
+        db_student.education_id = student.education_id
     if student.payment:
         db_student.payment = student.payment
     if student.protocol_number:
