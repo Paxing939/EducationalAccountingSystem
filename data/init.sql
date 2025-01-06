@@ -33,7 +33,7 @@ CREATE TABLE students (
     "end_date" DATE,
     "exam_date" DATE,
     "profession" VARCHAR(256),
-    "category" INTEGER,
+    "degree" INTEGER,
     "education_type_id" INTEGER REFERENCES education_types(id),
     "login" VARCHAR(128),
     "email" VARCHAR(128),
@@ -57,3 +57,8 @@ CREATE TABLE students (
     "full_name_bel" VARCHAR(128),
     "profession_bel" VARCHAR(256)
 );
+
+COPY students(referrer_organization,full_name,term,profession,education_type_id,login,birth_date,education_id,previous_profession,payment,organization,protocol_number,certificate_number,grad_id,theory_hours,practice_hours,practice_organization,status,comments)
+FROM '/docker-entrypoint-initdb.d/students.csv'
+DELIMITER ','
+CSV HEADER;

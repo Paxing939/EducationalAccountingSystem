@@ -26,7 +26,24 @@ elif i == 1:
 
     cur = conn.cursor()
 
+    some_query = """
+    SELECT
+        table_schema,
+        table_name,
+        column_name,
+        data_type
+    FROM
+        information_schema.columns
+    WHERE
+        table_schema NOT IN ('information_schema', 'pg_catalog')
+    ORDER BY
+        table_schema,
+        table_name,
+        ordinal_position;
+    """
+
     cur.execute("SELECT * FROM students")
+    # cur.execute(some_query)
     rows = cur.fetchall()
 
     for row in rows:
@@ -50,7 +67,6 @@ elif i == 2:
         print("current_user:", response.json().get("access_token"))
     else:
         print("Failed to enter:", response.status_code, response.text)
-
 elif i == 3:
 
     # URL для аутентификации
@@ -71,3 +87,20 @@ elif i == 3:
         auth_data = auth_response.json()
         token = auth_data.get("access_token")
         print(f"Token: {token}")
+elif i == 4:
+    url = "http://localhost:8000/students/"
+    payload = {
+        "referrer_organization": "ural govno zavod",
+        "age": 22,
+        "education_type": 1,
+        "profession_id": 101
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        print("Student created successfully:", response.json())
+    else:
+        print("Failed to create student:", response.status_code, response.text)

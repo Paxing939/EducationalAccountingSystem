@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
@@ -22,15 +23,26 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 class EducationType(Base):
     __tablename__ = "education_types"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(256))
 
+
 class Education(Base):
     __tablename__ = "educations"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(256))
+
 
 class Student(Base):
     __tablename__ = "students"
@@ -46,7 +58,7 @@ class Student(Base):
     end_date = Column(Date, nullable=True)
     exam_date = Column(Date, nullable=True)
     profession = Column(String(256))
-    category = Column(Integer)
+    degree = Column(Integer)
     education_type_id = Column(Integer, ForeignKey(EducationType.id))
     login = Column(String(128))
     email = Column(String(128), nullable=True)
@@ -73,9 +85,11 @@ class Student(Base):
 
 Base.metadata.create_all(bind=engine)
 
+
 class StudentPayment(BaseModel):
     date: date
     amount: float
+
 
 class StudentBase(BaseModel):
     referrer_organization: str | None = None
@@ -99,13 +113,14 @@ class StudentBase(BaseModel):
     status: int = 0
     comments: str = ''
 
+
 class StudentCreate(StudentBase):
     group: str
     full_name: str
     term: float
     start_date: date
     profession: str
-    category: int
+    degree: int
     education_type_id: int
     login: str
     birth_date: date
@@ -114,6 +129,7 @@ class StudentCreate(StudentBase):
     protocol_number: str
     full_name_bel: str
     profession_bel: str
+
 
 def authenticate_user(username: str, password: str):
     auth_service_url = "http://auth_service:8002/login"
@@ -124,11 +140,12 @@ def authenticate_user(username: str, password: str):
     auth_headers = {
         "Content-Type": "application/json"
     }
-    response = requests.post(auth_service_url, json = auth_payload, headers=auth_headers)
+    response = requests.post(auth_service_url, json=auth_payload, headers=auth_headers)
     if response.status_code == 200:
         return response.json()
     else:
         raise HTTPException(status_code=401, detail="Authentication failed")
+
 
 @app.post("/students/create")
 def create_student(student: StudentCreate):
@@ -144,6 +161,7 @@ def create_student(student: StudentCreate):
     db.refresh(db_student)
     return db_student
 
+
 class StudentUpdate(StudentBase):
     id: int
     group: str | None = None
@@ -151,7 +169,7 @@ class StudentUpdate(StudentBase):
     term: float | None = None
     start_date: date | None = None
     profession: str | None = None
-    category: int | None = None
+    degree: int | None = None
     education_type_id: int | None = None
     login: str | None = None
     birth_date: date | None = None
@@ -160,6 +178,7 @@ class StudentUpdate(StudentBase):
     protocol_number: str | None = None
     full_name_bel: str | None = None
     profession_bel: str | None = None
+
 
 @app.get("/students/edit")
 def edit_student(student: StudentUpdate):
@@ -177,8 +196,8 @@ def edit_student(student: StudentUpdate):
         db_student.start_date = student.start_date
     if student.profession:
         db_student.profession = student.profession
-    if student.category:
-        db_student.category = student.category
+    if student.degree:
+        db_student.degree = student.degree
     if student.education_type_id:
         if db.query(EducationType).filter(EducationType.id == student.education_type_id).first() is None:
             raise HTTPException(status_code=400, detail="Invalid education type id")
@@ -222,3 +241,10 @@ def edit_student(student: StudentUpdate):
     db.commit()
     db.refresh(db_student)
     return db_student
+
+
+@app.get("/students")
+def get_students():
+    db = SessionLocal()
+    students = db.query(Student).all()
+    return students
