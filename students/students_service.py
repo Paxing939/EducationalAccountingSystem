@@ -1,11 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from datetime import date
+from sqlalchemy import create_engine
+from schemas.students import *
+from models.students import *
 import requests
 
 db_name = 'students_db'
@@ -17,9 +15,9 @@ db_port = '5432'
 # Connect to the database
 DATABASE_URL = 'postgresql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
 
-Base = declarative_base()
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -30,105 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class EducationType(Base):
-    __tablename__ = "education_types"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(256))
-
-
-class Education(Base):
-    __tablename__ = "educations"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(256))
-
-
-class Student(Base):
-    __tablename__ = "students"
-    id = Column(Integer, primary_key=True, index=True)
-    referrer_organization = Column(String(256), nullable=True)
-    group = Column(String(10))
-    full_name = Column(String(128))
-    term = Column(Float)
-    start_date = Column(Date)
-    theory_end_date = Column(Date, nullable=True)
-    practice_start_date = Column(Date, nullable=True)
-    practice_end_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
-    exam_date = Column(Date, nullable=True)
-    profession = Column(String(256))
-    degree = Column(Integer)
-    education_type_id = Column(Integer, ForeignKey(EducationType.id))
-    login = Column(String(128))
-    email = Column(String(128), nullable=True)
-    birth_date = Column(Date)
-    education_id = Column(Integer, ForeignKey(Education.id))
-    previous_profession = Column(String(256), nullable=True)
-    payment = Column(Float)
-    organization = Column(String(256), nullable=True)
-    protocol_number = Column(String(20))
-    certificate_number = Column(String(20), nullable=True)
-    grad_id = Column(Integer, nullable=True)
-    theory_hours = Column(Integer, default=0)
-    practice_hours = Column(Integer, default=0)
-    practice_organization = Column(String(256), nullable=True)
-    status = Column(Integer, default=0)
-    payments = Column(ARRAY(JSONB), default=[])
-    comments = Column(String(256), default='')
-    graduation_date = Column(Date, nullable=True)
-    grade_1 = Column(Integer, nullable=True)
-    grade_2 = Column(Integer, nullable=True)
-    full_name_bel = Column(String(128))
-    profession_bel = Column(String(256))
-
-
-Base.metadata.create_all(bind=engine)
-
-
-class StudentPayment(BaseModel):
-    date: date
-    amount: float
-
-
-class StudentBase(BaseModel):
-    referrer_organization: str | None = None
-    theory_end_date: date | None = None
-    practice_start_date: date | None = None
-    practice_end_date: date | None = None
-    end_date: date | None = None
-    exam_date: date | None = None
-    email: str | None = None
-    previous_profession: str | None = None
-    organization: str | None = None
-    certificate_number: str | None = None
-    grad_id: int | None = None
-    practice_organization: str | None = None
-    graduation_date: date | None = None
-    grade_1: int | None = None
-    grade_2: int | None = None
-    payments: list[StudentPayment] = []
-    theory_hours: int = 0
-    practice_hours: int = 0
-    status: int = 0
-    comments: str = ''
-
-
-class StudentCreate(StudentBase):
-    group: str
-    full_name: str
-    term: float
-    start_date: date
-    profession: str
-    degree: int
-    education_type_id: int
-    login: str
-    birth_date: date
-    education_id: int
-    payment: float
-    protocol_number: str
-    full_name_bel: str
-    profession_bel: str
 
 
 def authenticate_user(username: str, password: str):
@@ -160,24 +59,6 @@ def create_student(student: StudentCreate):
     db.commit()
     db.refresh(db_student)
     return db_student
-
-
-class StudentUpdate(StudentBase):
-    id: int
-    group: str | None = None
-    full_name: str | None = None
-    term: float | None = None
-    start_date: date | None = None
-    profession: str | None = None
-    degree: int | None = None
-    education_type_id: int | None = None
-    login: str | None = None
-    birth_date: date | None = None
-    education_id: int | None = None
-    payment: float | None = None
-    protocol_number: str | None = None
-    full_name_bel: str | None = None
-    profession_bel: str | None = None
 
 
 @app.get("/students/edit")
