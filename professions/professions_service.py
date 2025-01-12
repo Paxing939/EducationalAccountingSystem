@@ -23,7 +23,7 @@ class Profession(Base):
     code = Column(String, index=True)
     name = Column(String, index=True)
     etks = Column(String, index=True)
-    education_durations = Column(ARRAY(Float), nullable=True)
+    education_durations = Column(ARRAY(String), nullable=True)
     education_categories = Column(ARRAY(String))
     retraining_only = Column(Boolean, default=False)
 
@@ -31,7 +31,7 @@ Base.metadata.create_all(bind=engine)
 
 
 class ProfessionBase(BaseModel):
-    education_durations: list[float] | None = None
+    education_durations: list[str] | None = None
     retraining_only: bool = False
 
 class ProfessionCreate(ProfessionBase):
