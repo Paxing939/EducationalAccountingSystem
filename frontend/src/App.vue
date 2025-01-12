@@ -10,6 +10,24 @@
         {{ item.full_name }} will study for {{ item.term }} months
       </div>
     </template>
+    <template #item-full_name="{ full_name }">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          :value="full_name"
+          @input="inputHandler(full_name, $event)"
+        />
+      </div>
+    </template>
+    <template #item-term="{ term }">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          :value="term"
+          @input="inputHandler(term, $event)"
+        />
+      </div>
+    </template>
   </EasyDataTable>
 </template>
 
@@ -58,10 +76,47 @@ export default defineComponent({
       }
     });
 
+    const inputHandler = (some_value: string, e: string) => {
+      some_value = e;
+    };
+
+    const isEditing = ref(false);
+
+    const deleteItem = (val: Item) => {
+      items.value = items.value.filter((item) => item.id !== val.id);
+    };
+
     return {
       headers,
-      items
+      items,
+      deleteItem,
+      isEditing,
+      inputHandler,
     };
   },
 });
 </script>
+
+<style>
+.input-wrapper {
+  padding: 2px;
+  box-sizing: border-box;
+  max-height: 3em !important; /* Adjust this value as needed */
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.5 !important; /* Adjust line height */
+  border: none !important; /* Remove border from input wrapper */
+}
+
+.input-wrapper input {
+  box-sizing: border-box !important;
+  max-height: 100% !important;
+  width: 100% !important; /* Make sure the input field uses the full width of the cell */
+  white-space: pre-wrap !important; /* Make sure text wraps properly */
+  word-wrap: break-word !important;
+  line-height: inherit !important; /* Inherit line height from the wrapper */
+  border: none !important; /* Remove border from the input field */
+  outline: none !important; /* Remove outline from the input field */
+}
+</style>
