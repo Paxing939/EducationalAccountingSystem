@@ -1,4 +1,4 @@
-from sqlalchemy import Float, create_engine, Column, Integer, String, ARRAY, Boolean
+from sqlalchemy import Float, create_engine, Column, Integer, String, ARRAY, Boolean, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -25,3 +25,9 @@ def add_professions(professions: list[Profession]):
     db.add_all(professions)
     db.commit()
     print(f"Added {len(professions)} entries to the database")
+
+def get_profession(profession: Profession) -> Profession:
+    db = SessionLocal()
+    result = db.query(Profession).filter(func.lower(Profession.name) == func.lower(profession.name)).first()
+    db.close()
+    return result
