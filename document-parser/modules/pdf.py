@@ -114,17 +114,17 @@ def _patch_professions(patches: list[_Profession_Patch], professions: list[Profe
         match patch.action:
             case _Profession_Patch_Action.REPLACE:
                 for i in range(len(professions)):
-                    if patch.profession == professions[i]:
+                    if patch.profession.name.lower() == professions[i].name.lower():
                         professions[i] = patch.profession2
                         break
             case _Profession_Patch_Action.APPEND:
                 for i in range(len(professions)):
-                    if patch.profession == professions[i]:
+                    if patch.profession.name.lower() == professions[i].name.lower():
                         professions.insert(i + 1, patch.profession2)
                         break
             case _Profession_Patch_Action.REMOVE:
                 for i in range(len(professions)):
-                    if patch.profession == professions[i]:
+                    if patch.profession.name.lower() == professions[i].name.lower():
                         professions.pop(i)
                         break
 
