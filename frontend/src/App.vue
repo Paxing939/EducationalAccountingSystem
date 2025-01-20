@@ -10,30 +10,46 @@
         {{ item.full_name }} will study for {{ item.term }} months
       </div>
     </template>
+<!--    <template #item-full_name="{ full_name }">-->
+<!--      <div class="input-wrapper">-->
+<!--        <input-->
+<!--          type="text"-->
+<!--          :value="full_name"-->
+<!--          @input="inputHandler(full_name, $event)"-->
+<!--        />-->
+<!--      </div>-->
+<!--    </template>-->
+<!--    <template #item-term="{ term }">-->
+<!--      <div class="input-wrapper">-->
+<!--        <input-->
+<!--          type="text"-->
+<!--          :value="term"-->
+<!--          @input="inputHandler(term, $event)"-->
+<!--        />-->
+<!--      </div>-->
+<!--    </template>-->
+
+<!--    <template v-for="header in headers" :key="header.value" v-slot:[`item-${header.value}`]="{ item }">-->
+<!--      <EditableCell-->
+<!--          :value="getValueByIndex(item, getHeaderIndex(header.value))"-->
+<!--          @update="updateItem(header.value, item.id, $event)"-->
+<!--      />-->
+<!--    </template>-->
     <template #item-full_name="{ full_name }">
-      <div class="input-wrapper">
-        <input
-          type="text"
+<!--      {{ full_name }}-->
+      <EditableCell
           :value="full_name"
-          @input="inputHandler(full_name, $event)"
-        />
-      </div>
+          @update="updateItem('full_name', item.id, $event)"
+      />
     </template>
-    <template #item-term="{ term }">
-      <div class="input-wrapper">
-        <input
-          type="text"
-          :value="term"
-          @input="inputHandler(term, $event)"
-        />
-      </div>
-    </template>
+
   </EasyDataTable>
 </template>
 
 <script lang="ts">
 import {defineComponent, onMounted, ref} from 'vue';
 import type {Header, Item} from "vue3-easy-data-table";
+import EditableCell from "./components/EditableCell.vue";
 
 export default defineComponent({
   setup() {
@@ -76,22 +92,28 @@ export default defineComponent({
       }
     });
 
-    const inputHandler = (some_value: string, e: string) => {
-      some_value = e;
+    const getHeaderIndex = (value: string) => {
+      return headers.findIndex(header => header.value === value);
     };
 
-    const isEditing = ref(false);
+    const getValueByIndex = (item: Item, index: number) => {
+      const key = headers[index].value;
+      return item[key];
+    };
 
-    const deleteItem = (val: Item) => {
-      items.value = items.value.filter((item) => item.id !== val.id);
+    const updateItem = (field: string, id: number, value: string) => {
+      const item = items.value.find(item => item.id === id);
+      if (item) {
+        item[field] = value;
+      }
     };
 
     return {
       headers,
       items,
-      deleteItem,
-      isEditing,
-      inputHandler,
+      getHeaderIndex,
+      getValueByIndex,
+      updateItem,
     };
   },
 });
@@ -101,22 +123,22 @@ export default defineComponent({
 .input-wrapper {
   padding: 2px;
   box-sizing: border-box;
-  max-height: 3em !important; /* Adjust this value as needed */
+  max-height: 3em !important;
   overflow: hidden !important;
   display: flex !important;
   align-items: center !important;
-  line-height: 1.5 !important; /* Adjust line height */
-  border: none !important; /* Remove border from input wrapper */
+  line-height: 1.5 !important;
+  border: none !important;
 }
 
 .input-wrapper input {
   box-sizing: border-box !important;
   max-height: 100% !important;
-  width: 100% !important; /* Make sure the input field uses the full width of the cell */
-  white-space: pre-wrap !important; /* Make sure text wraps properly */
+  width: 100% !important;
+  white-space: pre-wrap !important;
   word-wrap: break-word !important;
-  line-height: inherit !important; /* Inherit line height from the wrapper */
-  border: none !important; /* Remove border from the input field */
-  outline: none !important; /* Remove outline from the input field */
+  line-height: inherit !important;
+  border: none !important;
+  outline: none !important;
 }
 </style>
