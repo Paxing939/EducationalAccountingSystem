@@ -1,51 +1,34 @@
-# auth_service.py
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi_jwt_auth import AuthJWT
-from fastapi_jwt_auth.exceptions import AuthJWTException
+from fastapi import FastAPI, HTTPException, Depends, Response
+from authx import AuthX, AuthXConfig
 from pydantic import BaseModel
-from starlette.responses import JSONResponse
 
 app = FastAPI()
+config = AuthXConfig()
+config.JWT_SECRET_KEY = "SECRET_KEY"
+config.JWT_ACCESS_COOKIE_NAME = "my_access_token"
+config.JWT_TOKEN_LOCATION = ["cookies"]
 
-class Settings(BaseModel):
-    authjwt_secret_key: str = "your_secret_key"
-
-@AuthJWT.load_config
-def get_config():
-    return Settings()
-
-@app.exception_handler(AuthJWTException)
-def authjwt_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
-
-class User(BaseModel):
+security = AuthX(config=config)
+token = ""
+class UserLoginSchema(BaseModel):
     username: str
     password: str
+def read_users_from_file(file_path: str):
+    users = {}
+    with open(file_path, 'r') as file:
+        for line in file:
+            username, password = line.strip().split()
+            users[username] = password
+    return users
+@app.post("/login")
+def login(creds: UserLoginSchema, response: Response):
+    users = read_users_from_file('testLoginsAndPasswords.txt')
+    if creds.username in users and users[creds.username] == creds.password:
+        token = security.create_access_token(uid="1")
+        response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
+        return {"access_token": token}
+    raise HTTPException(status_code=401, detail="Неверный логин или пароль.")
 
-fake_db = {
-    "test": {
-        "username": "test",
-        "password": "test"
-    }
-}
-
-@app.post('/login')
-def login(user: User, Authorize: AuthJWT = Depends()):
-    if user.username not in fake_db or fake_db[user.username]["password"] != user.password:
-        raise HTTPException(status_code=401, detail="Bad username or password")
-    access_token = Authorize.create_access_token(subject=user.username)
-    return {"access_token": access_token}
-
-@app.get('/verify-token')
-def verify_token(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    current_user = Authorize.get_jwt_subject()
-    return {"user": current_user}
-
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=8001)
+@app.get("/protected", dependencies=[Depends(security.access_token_required)])
+def protected():
+    return True
