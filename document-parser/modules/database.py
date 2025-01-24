@@ -28,6 +28,6 @@ def add_professions(professions: list[Profession]):
 
 def get_profession(profession: Profession) -> Profession:
     db = SessionLocal()
-    result = db.query(Profession).filter(func.lower(Profession.name) == func.lower(profession.name)).first()
+    result = db.query(Profession).filter(func.lower(Profession.name) == func.lower(profession.name.replace('ё', 'е'))).first()
     db.close()
     return result

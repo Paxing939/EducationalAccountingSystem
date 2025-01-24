@@ -15,9 +15,11 @@ def _convert(text: str) -> list[Profession]:
         education_length = education_length.split('$')
         education_category = education_length[len(education_length) // 2:]
         education_length = education_length[:len(education_length) // 2]
+        name = match[1]
+        name = name.replace('$', ' ') if name.find('$') != -1 and name[name.find('$') - 1] != '-' else name.replace('$', '')
         proffesions.append(Profession(
             code = match[0],
-            name = match[1].replace('$', ' '),
+            name = name,
             etks = match[2],
             education_durations = education_length,
             education_categories = education_category
