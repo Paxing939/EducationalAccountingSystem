@@ -6,6 +6,7 @@
       :value="value"
       @input="$emit('update', $event.target.value)"
       @blur="isEditing = false"
+      @keyup.enter="isEditing = false"
     />
     <span v-else>{{ value }}</span>
   </div>
@@ -24,14 +25,16 @@ export default defineComponent({
   setup() {
     const isEditing = ref(false);
 
-    const edit = () => {
-      isEditing.value = true;
-    };
-
     return {
       isEditing,
-      edit,
     };
+  },
+  methods: {
+    async edit() {
+      this.isEditing = true;
+      await this.$nextTick();
+      this.$el.querySelector('input').focus();
+    },
   },
 });
 </script>
@@ -46,6 +49,8 @@ export default defineComponent({
   width: 100%;
   border: none;
   outline: none;
+  background: none;
+  font: inherit;
 }
 
 .input-wrapper span {

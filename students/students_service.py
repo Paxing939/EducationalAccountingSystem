@@ -61,7 +61,7 @@ def create_student(student: StudentCreate):
     return db_student
 
 
-@app.get("/students/edit")
+@app.post("/students/edit")
 def edit_student(student: StudentUpdate):
     db = SessionLocal()
     db_student = db.query(Student).filter(Student.id == student.id).first()
@@ -114,7 +114,7 @@ def edit_student(student: StudentUpdate):
     db_student.graduation_date = student.graduation_date
     db_student.grade_1 = student.grade_1
     db_student.grade_2 = student.grade_2
-    db_student.payments = [payment.model_dump(mode='json') for payment in student.payments]
+    db_student.payments = [payment.model_dump(mode='json') for payment in student.payments] if student.payments else []
     db_student.theory_hours = student.theory_hours
     db_student.practice_hours = student.practice_hours
     db_student.status = student.status

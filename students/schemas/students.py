@@ -23,7 +23,7 @@ class StudentBase(BaseModel):
     graduation_date: date | None = None
     grade_1: int | None = None
     grade_2: int | None = None
-    payments: list[StudentPayment] = []
+    payments: list[StudentPayment] | None = []
     theory_hours: int = 0
     practice_hours: int = 0
     status: int = 0

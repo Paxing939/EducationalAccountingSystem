@@ -4,10 +4,9 @@
       :items="items"
       alternating
       border-cell
-  >
-    <template #expand="item">
+  > <template #expand="item">
       <div style="padding: 15px">
-        {{ item.full_name }} will study for {{ item.term }} months
+          <button @click="sendData(item.id)">Отправить</button>
       </div>
     </template>
 <!--    <template #item-full_name="{ full_name }">-->
@@ -35,11 +34,11 @@
 <!--          @update="updateItem(header.value, item.id, $event)"-->
 <!--      />-->
 <!--    </template>-->
-    <template #item-full_name="{ full_name }">
+    <template #item-full_name="{ id, full_name }">
 <!--      {{ full_name }}-->
       <EditableCell
           :value="full_name"
-          @update="updateItem('full_name', item.id, $event)"
+          @update="updateItem('full_name', id, $event)"
       />
     </template>
 
@@ -64,7 +63,7 @@ export default defineComponent({
       {text: 'Кем направлен', value: 'referrer_organization'},
       {text: '№ п/п', value: 'id', sortable: true},
       {text: 'Группа', value: 'group'},
-      {text: 'ФИО', value: 'full_name', sortable: true},
+      {text: 'ФИО', value: 'full_name', sortable: true, width: 200},
       {text: 'Срок обучения', value: 'term', sortable: true},
       {text: 'Профессия', value: 'profession', sortable: true},
       {text: 'Разряд', value: 'degree'},
@@ -108,13 +107,37 @@ export default defineComponent({
       }
     };
 
+    const sendData = async (id: number) => {
+        try {
+            const item = items.value.find(item => item.id === id);
+            if (item) {
+                const response = await fetch('http://localhost:8000/students/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(item),
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+            }
+        } catch (error) {
+            console.error('Fetch error: ', error);
+        }
+    };
+
     return {
       headers,
       items,
       getHeaderIndex,
       getValueByIndex,
       updateItem,
+      sendData,
     };
+  },
+  components: {
+    EditableCell,
   },
 });
 </script>
