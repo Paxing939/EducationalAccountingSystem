@@ -5,8 +5,9 @@
       alternating
       border-cell
   > <template #expand="item">
-      <div style="padding: 15px">
+      <div class="expand-container">
           <button @click="sendData(item.id)">Отправить</button>
+          <span v-if="data_sent" :class="data_sent_good ? 'text-success' : 'text-danger'">{{ send_data_info }}</span>
       </div>
     </template>
 <!--    <template #item-full_name="{ full_name }">-->
@@ -79,6 +80,10 @@ export default defineComponent({
 
     const items = ref<Item[]>([]);
 
+    const data_sent = ref<Boolean>(false);
+    const data_sent_good = ref<Boolean>(false);
+    const send_data_info = ref<String>('');
+
     onMounted(async () => {
       try {
         const response = await fetch('http://localhost:8000/students');
@@ -118,8 +123,15 @@ export default defineComponent({
                     },
                     body: JSON.stringify(item),
                 });
+                data_sent.value = true;
                 if (!response.ok) {
                     throw new Error('Network response was not ok ' + response.statusText);
+                    data_sent_good.value = false;
+                    send_data_info.value = 'Что-то пошло не так';
+                }
+                else {
+                    data_sent_good.value = true;
+                    send_data_info.value = 'Данные успешно отправлены';
                 }
             }
         } catch (error) {
@@ -130,6 +142,9 @@ export default defineComponent({
     return {
       headers,
       items,
+      data_sent,
+      data_sent_good,
+      send_data_info,
       getHeaderIndex,
       getValueByIndex,
       updateItem,
@@ -163,5 +178,24 @@ export default defineComponent({
   line-height: inherit !important;
   border: none !important;
   outline: none !important;
+}
+
+.expand-container {
+  padding: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.text-success, .text-danger {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.text-success {
+  color: #28a745;
+}
+
+.text-danger {
+  color: #dc3545;
 }
 </style>
