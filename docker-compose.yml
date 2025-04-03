@@ -40,17 +40,17 @@ services:
 #      - postgres_db
 #    environment:
 #      DATABASE_URL: postgresql://user:password@postgres_db:5443/students_db
-#
-#  professions_service:
-#   build:
-#     context: ./professions
-#   ports:
-#     - "8001:8001"
-#   depends_on:
-#     - postgres_db
-#   environment:
-#     DATABASE_URL: postgresql://user:password@postgres_db/students_db
-#
+
+  professions_service:
+   build:
+     context: ./professions
+   ports:
+    - "8001:8001"
+   depends_on:
+    - postgres_db
+   environment:
+    DATABASE_URL: postgresql://user:password@postgres_db/students_db
+
 #  frontend:
 #    build:
 #      context: ./frontend

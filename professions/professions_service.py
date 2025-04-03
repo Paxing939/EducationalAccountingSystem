@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import Float, create_engine, Column, Integer, String, ARRAY, Boolean
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,6 +17,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Profession(Base):
     __tablename__ = "professions"
@@ -26,6 +34,13 @@ class Profession(Base):
     education_durations = Column(ARRAY(String), nullable=True)
     education_categories = Column(ARRAY(String))
     retraining_only = Column(Boolean, default=False)
+
+class ProfessionsHours(Base):
+    __tablename__ = "professions_hours"
+    id = Column(Integer, primary_key=True, index=True)
+    duration = Column(Float, index=True)
+    theory_hours = Column(Integer, index=True)
+    practice_hours = Column(Integer, index=True)
 
 Base.metadata.create_all(bind=engine)
 
@@ -75,3 +90,15 @@ def edit_profession(profession: ProfessionUpdate):
     db.commit()
     db.refresh(db_profession)
     return db_profession
+
+@app.get("/professions")
+def get_professions():
+    db = SessionLocal()
+    db_professions = db.query(Profession).all()
+    return db_professions
+
+@app.get("/professions_hours")
+def get_professions_hours():
+    db = SessionLocal()
+    db_professions_hours = db.query(ProfessionsHours).all()
+    return db_professions_hours

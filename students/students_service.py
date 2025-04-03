@@ -129,3 +129,15 @@ def get_students():
     db = SessionLocal()
     students = db.query(Student).all()
     return students
+
+@app.get("/educations")
+def get_educations():
+    db = SessionLocal()
+    educations = db.query(Education).all()
+    return educations
+
+@app.get("/education_types")
+def get_education_types():
+    db = SessionLocal()
+    education_types = db.query(EducationType).all()
+    return education_types

@@ -1,55 +1,60 @@
 <template>
-  <EasyDataTable
-      :headers="headers"
-      :items="items"
-      alternating
-      border-cell
-  > <template #expand="item">
-      <div class="expand-container">
-          <button @click="sendData(item.id)">Отправить</button>
-          <span v-if="data_sent" :class="data_sent_good ? 'text-success' : 'text-danger'">{{ send_data_info }}</span>
-      </div>
-    </template>
-<!--    <template #item-full_name="{ full_name }">-->
-<!--      <div class="input-wrapper">-->
-<!--        <input-->
-<!--          type="text"-->
-<!--          :value="full_name"-->
-<!--          @input="inputHandler(full_name, $event)"-->
-<!--        />-->
-<!--      </div>-->
-<!--    </template>-->
-<!--    <template #item-term="{ term }">-->
-<!--      <div class="input-wrapper">-->
-<!--        <input-->
-<!--          type="text"-->
-<!--          :value="term"-->
-<!--          @input="inputHandler(term, $event)"-->
-<!--        />-->
-<!--      </div>-->
-<!--    </template>-->
+    <div>
+      <RegistrationModal v-if="showModal" @closeModal="closeRegistrationModal()" />
+      <button @click="showRegistrationModal()">Добавить слушателя</button>
+      <EasyDataTable
+          :headers="headers"
+          :items="items"
+          alternating
+          border-cell
+      > <template #expand="item">
+          <div class="expand-container">
+              <button @click="sendData(item.id)">Отправить</button>
+              <span v-if="data_sent" :class="data_sent_good ? 'text-success' : 'text-danger'">{{ send_data_info }}</span>
+          </div>
+        </template>
+    <!--    <template #item-full_name="{ full_name }">-->
+    <!--      <div class="input-wrapper">-->
+    <!--        <input-->
+    <!--          type="text"-->
+    <!--          :value="full_name"-->
+    <!--          @input="inputHandler(full_name, $event)"-->
+    <!--        />-->
+    <!--      </div>-->
+    <!--    </template>-->
+    <!--    <template #item-term="{ term }">-->
+    <!--      <div class="input-wrapper">-->
+    <!--        <input-->
+    <!--          type="text"-->
+    <!--          :value="term"-->
+    <!--          @input="inputHandler(term, $event)"-->
+    <!--        />-->
+    <!--      </div>-->
+    <!--    </template>-->
 
-<!--    <template v-for="header in headers" :key="header.value" v-slot:[`item-${header.value}`]="{ item }">-->
-<!--      <EditableCell-->
-<!--          :value="getValueByIndex(item, getHeaderIndex(header.value))"-->
-<!--          @update="updateItem(header.value, item.id, $event)"-->
-<!--      />-->
-<!--    </template>-->
-    <template #item-full_name="{ id, full_name }">
-<!--      {{ full_name }}-->
-      <EditableCell
-          :value="full_name"
-          @update="updateItem('full_name', id, $event)"
-      />
-    </template>
+    <!--    <template v-for="header in headers" :key="header.value" v-slot:[`item-${header.value}`]="{ item }">-->
+    <!--      <EditableCell-->
+    <!--          :value="getValueByIndex(item, getHeaderIndex(header.value))"-->
+    <!--          @update="updateItem(header.value, item.id, $event)"-->
+    <!--      />-->
+    <!--    </template>-->
+        <template #item-full_name="{ id, full_name }">
+    <!--      {{ full_name }}-->
+          <EditableCell
+              :value="full_name"
+              @update="updateItem('full_name', id, $event)"
+          />
+        </template>
 
-  </EasyDataTable>
+      </EasyDataTable>
+  </div>
 </template>
 
 <script lang="ts">
 import {defineComponent, onMounted, ref} from 'vue';
 import type {Header, Item} from "vue3-easy-data-table";
 import EditableCell from "./components/EditableCell.vue";
+import RegistrationModal from "./components/RegistrationModal.vue";
 
 export default defineComponent({
   setup() {
@@ -84,16 +89,22 @@ export default defineComponent({
     const data_sent_good = ref<Boolean>(false);
     const send_data_info = ref<String>('');
 
-    onMounted(async () => {
-      try {
-        const response = await fetch('http://localhost:8000/students');
-        if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.statusText);
+    const showModal = ref<Boolean>(false);
+
+    const loadStudents = async () => {
+        try {
+          const response = await fetch('http://localhost:8000/students');
+          if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+          }
+          items.value = await response.json();
+        } catch (error) {
+          console.error('Fetch error: ', error);
         }
-        items.value = await response.json();
-      } catch (error) {
-        console.error('Fetch error: ', error);
-      }
+    };
+
+    onMounted(async () => {
+        await loadStudents();
     });
 
     const getHeaderIndex = (value: string) => {
@@ -139,6 +150,15 @@ export default defineComponent({
         }
     };
 
+    const showRegistrationModal = async () => {
+        showModal.value = true;
+    }
+
+    const closeRegistrationModal = async () => {
+        showModal.value = false;
+        await loadStudents();
+    }
+
     return {
       headers,
       items,
@@ -149,10 +169,14 @@ export default defineComponent({
       getValueByIndex,
       updateItem,
       sendData,
+      showModal,
+      showRegistrationModal,
+      closeRegistrationModal,
     };
   },
   components: {
     EditableCell,
+    RegistrationModal,
   },
 });
 </script>

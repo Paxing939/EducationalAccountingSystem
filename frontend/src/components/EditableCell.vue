@@ -2,8 +2,8 @@
   <div class="input-wrapper" @dblclick="edit">
     <input
       v-if="isEditing"
-      type="text"
-      :value="value"
+      :value
+      :type
       @input="$emit('update', $event.target.value)"
       @blur="isEditing = false"
       @keyup.enter="isEditing = false"
@@ -21,6 +21,11 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      required: false,
+      default: 'text',
+    }
   },
   setup() {
     const isEditing = ref(false);
@@ -46,11 +51,16 @@ export default defineComponent({
 }
 
 .input-wrapper input {
+  flex: 1;
   width: 100%;
   border: none;
   outline: none;
   background: none;
   font: inherit;
+}
+
+.input-wrapper input:focus {
+    width: 100%;
 }
 
 .input-wrapper span {
