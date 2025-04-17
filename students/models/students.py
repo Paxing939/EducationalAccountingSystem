@@ -17,6 +17,12 @@ class Education(Base):
     name = Column(String(256))
 
 
+class StudentStatus(Base):
+    __tablename__ = "student_statuses"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(256))
+
+
 class Student(Base):
     __tablename__ = "students"
     id = Column(Integer, primary_key=True, index=True)
@@ -46,7 +52,7 @@ class Student(Base):
     theory_hours = Column(Integer, default=0)
     practice_hours = Column(Integer, default=0)
     practice_organization = Column(String(256), nullable=True)
-    status = Column(Integer, default=0)
+    status = Column(Integer, ForeignKey(StudentStatus.id))
     payments = Column(ARRAY(JSONB), default=[])
     comments = Column(String(256), default='')
     graduation_date = Column(Date, nullable=True)

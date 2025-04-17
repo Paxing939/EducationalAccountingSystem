@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from schemas.students import *
 from models.students import *
 import requests
+import re
 
 db_name = 'students_db'
 db_user = 'user'
@@ -54,6 +55,7 @@ def create_student(student: StudentCreate):
     if db.query(Education).filter(Education.id == student.education_id).first() is None:
         raise HTTPException(status_code=400, detail="Invalid education id")
     student.payments = [payment.model_dump(mode='json') for payment in student.payments]
+    student.full_name = re.sub(' +', ' ', student.full_name.strip())
     db_student = Student(**student.dict())
     db.add(db_student)
     db.commit()
@@ -70,7 +72,7 @@ def edit_student(student: StudentUpdate):
     if student.group:
         db_student.group = student.group
     if student.full_name:
-        db_student.full_name = student.full_name
+        db_student.full_name = re.sub(' +', ' ', student.full_name.strip())
     if student.term:
         db_student.term = student.term
     if student.start_date:
@@ -123,12 +125,30 @@ def edit_student(student: StudentUpdate):
     db.refresh(db_student)
     return db_student
 
+@app.get("/students/delete/{id}")
+def delete_student(id: int):
+    db = SessionLocal()
+    student = db.query(Student).filter(Student.id == id).first()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    db.delete(student)
+    db.commit()
+    return {"message": "Student deleted successfully"}
+
 
 @app.get("/students")
 def get_students():
     db = SessionLocal()
     students = db.query(Student).all()
     return students
+
+@app.get("/students/{student_id}")
+def get_student(student_id: int):
+    db = SessionLocal()
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
 
 @app.get("/educations")
 def get_educations():
@@ -141,3 +161,9 @@ def get_education_types():
     db = SessionLocal()
     education_types = db.query(EducationType).all()
     return education_types
+
+@app.get("/student_statuses")
+def get_student_statuses():
+    db = SessionLocal()
+    student_statuses = db.query(StudentStatus).all()
+    return student_statuses

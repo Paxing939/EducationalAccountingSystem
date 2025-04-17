@@ -2,7 +2,7 @@
     <dialog class="student-registration-modal" @close="close">
         <form class="student-registration-form" v-on:submit.prevent>
             <label for="referrer_organization">Кем направлен</label>
-            <input type="text" id="referrer_organization" v-model="referrer_organization">
+            <input type="text" id="referrer_organization" v-model="referrer_organization" @blur="$event.target.value ? this.organization = $event.target.value : undefined">
             <label for="group">Группа</label>
             <input type="text" id="group" v-model="group">
             <label for="full_name">ФИО</label>
@@ -14,6 +14,7 @@
                 option-text="name"
                 v-model="profession_id"
                 id="profession"
+                @update:modelValue="fillPreviousProfession()"
             />
             <label for="degree">Разряд</label>
             <ModelSelect
@@ -21,9 +22,10 @@
                 v-model="degree"
                 :isDisabled="profession_id === 0"
                 id="degree"
+                @update:modelValue="fillPreviousProfession()"
             />
             <label for="start_date">Дата начала обучения</label>
-            <input type="date" id="start_date" v-model="start_date">
+            <input type="date" id="start_date" v-model="start_date" @blur="checkStartDate($event.target.value) ? undefined : this.start_date = ''">
             <label for="education_type_id">Тип обучения</label>
             <ModelListSelect
                 :list="education_types"
@@ -31,6 +33,7 @@
                 option-text="name"
                 v-model="education_type_id"
                 id="education_type_id"
+                @update:modelValue="fillPreviousProfession()"
             />
             <label for="birth_date">Дата рождения</label>
             <input type="date" id="birth_date" v-model="birth_date">
@@ -72,19 +75,19 @@ moment.updateLocale('ru', {
 
 export default defineComponent({
   setup() {
-    const referrer_organization = ref<String>('');
-    const group = ref<String>('');
-    const full_name = ref<String>('');
+    const referrer_organization = ref<string>('');
+    const group = ref<string>('');
+    const full_name = ref<string>('');
     const start_date = ref<Date>(new Date());
-    const profession_id = ref<Number>(0);
-    const degree = ref<Number>(0);
-    const education_type_id = ref<Number>(0);
+    const profession_id = ref<number>(0);
+    const degree = ref<number>(0);
+    const education_type_id = ref<number>(0);
     const birth_date = ref<Date>(new Date());
-    const education_id = ref<Number>(0);
-    const previous_profession = ref<String>('');
-    const payment = ref<Number>(0);
-    const organization = ref<String>('');
-    const comments = ref<String>('');
+    const education_id = ref<number>(0);
+    const previous_profession = ref<string>('');
+    const payment = ref<number>(0);
+    const organization = ref<string>('');
+    const comments = ref<string>('');
 
     interface Profession {
         id: number;
@@ -177,14 +180,41 @@ export default defineComponent({
     async close() {
         this.$emit('closeModal');
     },
+    checkStartDate(start_date: string | Date) {
+        const date = moment(start_date);
+        const today = moment();
+        const diff_days = today.diff(date, 'days');
+        if (diff_days > 10) {
+            alert('Дата начала не может быть раньше 10 дней от текущей даты')   
+            return false;
+        }
+        const diff_months = today.diff(date, 'months', true);
+        if (diff_months < -3) {
+            alert('Дата начала не может быть позже 3 месяцев от текущей даты')
+            return false;
+        }
+        return true;
+    },
+    fillPreviousProfession() {
+        if (this.education_type_id == 3) {
+            const profession = this.professions.find(profession => profession.id === this.profession_id)?.name;
+            if (profession && this.degree > 1) {
+                this.previous_profession = profession + ` ${this.degree - 1}-го разряда`;
+            }
+        }
+    },
     async addStudent () {
         try {
             if (this.profession_id === 0) {
-                throw new Error('Профессия не выбрана');
+                alert('Профессия не выбрана');
+                throw new Error('Profession is not selected');
+            }
+            if (!this.checkStartDate(this.start_date)) {
+                throw new Error('Start date is invalid');
             }
             const profession = this.professions.find(profession => profession.id === this.profession_id);
             const term = profession?.education_durations[profession?.education_categories.findIndex(c => c.includes(this.degree.toString()))] ?? 0;
-            const hours = this.professions_hours.find(hours => hours.duration === term) ?? { theory_hours: 0, practice_hours: 0 };
+            const hours = this.professions_hours.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
             const theory_end_date = moment(this.start_date).businessAdd(hours.theory_hours - 2);
             const practice_start_date = theory_end_date.businessAdd(1);
             const practice_end_date = practice_start_date.businessAdd(hours.practice_hours - 1);
@@ -215,14 +245,14 @@ export default defineComponent({
                     education_id: this.education_id,
                     previous_profession: this.previous_profession,
                     payment: this.payment,
-                    organization: this.organization,
+                    organization: this.organization ?? this.referrer_organization,
                     protocol_number: '',
                     certificate_number: undefined,
                     grad_id: undefined,
                     theory_hours: hours.theory_hours,
                     practice_hours: hours.practice_hours,
-                    practice_organization: undefined,
-                    status: 0,
+                    practice_organization: this.referrer_organization,
+                    status: 1,
                     payments: [],
                     comments: this.comments,
                     graduation_date: end_date.format('YYYY-MM-DD'),

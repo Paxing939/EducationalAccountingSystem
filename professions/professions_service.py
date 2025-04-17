@@ -102,3 +102,11 @@ def get_professions_hours():
     db = SessionLocal()
     db_professions_hours = db.query(ProfessionsHours).all()
     return db_professions_hours
+
+@app.get("/professions/{id}")
+def get_profession(id: int):
+    db = SessionLocal()
+    db_profession = db.query(Profession).filter(Profession.id == id).first()
+    if db_profession is None:
+        raise HTTPException(status_code=400, detail="Profession not found")
+    return db_profession

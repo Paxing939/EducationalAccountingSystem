@@ -1,19 +1,23 @@
 <template>
   <div class="input-wrapper" @dblclick="edit">
-    <input
+    <select
       v-if="isEditing"
-      :value
-      :type
-      @input="$emit('update', $event.target.value)"
+      @change="$emit('update', $event.target.value); isEditing = false"
       @blur="isEditing = false"
-      @keyup.enter="isEditing = false"
-    />
-    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : value }}</span>
+    >
+        <option v-for="option in options" :value="option.value" :selected="option.value == value">{{ option.text }}</option>
+    </select>
+    <span v-else>{{ options.find(option => option.value == value)?.text }}</span>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, PropType } from 'vue';
+
+export interface SelectOption {
+    value: any,
+    text: String
+}
 
 export default defineComponent({
   props: {
@@ -21,10 +25,9 @@ export default defineComponent({
       type: String,
       required: true,
     },
-    type: {
-      type: String,
-      required: false,
-      default: 'text',
+    options: {
+      type: Array as PropType<SelectOption[]>,
+      required: true,
     }
   },
   setup() {
@@ -38,7 +41,8 @@ export default defineComponent({
     async edit() {
       this.isEditing = true;
       await this.$nextTick();
-      this.$el.querySelector('input').focus();
+      this.$el.querySelector('select').focus();
+      this.$el.querySelector('select').showPicker();
     },
   },
 });
@@ -50,7 +54,7 @@ export default defineComponent({
   align-items: center;
 }
 
-.input-wrapper input {
+.input-wrapper select {
   flex: 1;
   width: 100%;
   border: none;
@@ -59,7 +63,7 @@ export default defineComponent({
   font: inherit;
 }
 
-.input-wrapper input:focus {
+.input-wrapper select:focus {
     width: 100%;
 }
 
