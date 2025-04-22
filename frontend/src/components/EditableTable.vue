@@ -3,6 +3,8 @@
       :headers="headers"
       :items="items"
       :body-row-class-name="bodyRowClassName"
+      :search-field="searchField"
+      :search-value="searchValue"
       alternating
       border-cell
   > 
@@ -19,6 +21,7 @@
           <EditableCell
               :value="item[header.value]"
               :type="header.type"
+              :match="header.match"
               @update="$emit('updateField', {'field': header.value, 'id': item.id, 'value': formatValue($event, header)})"
           />
       </template>
@@ -41,6 +44,7 @@ export { Item };
 export interface EditableTableHeader extends Header {
     editable?: boolean,
     type?: string,
+    match?: string,
     float_precision?: number,
     max?: number,
     min?: number,
@@ -60,6 +64,14 @@ export default defineComponent({
       type: Function as PropType<(item: Item, rowNumber: number) => string>,
       required: false,
       default: () => '',
+    },
+    searchField: {
+      type: [String, Array],
+      default: '',
+    },
+    searchValue: {
+      type: String,
+      default: '',
     },
   },
   components: {

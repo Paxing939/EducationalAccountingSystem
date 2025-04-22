@@ -13,7 +13,7 @@ class StudentBase(BaseModel):
     practice_start_date: date | None = None
     practice_end_date: date | None = None
     end_date: date | None = None
-    exam_date: date | None = None
+    exam_date: str | None = None
     email: str | None = None
     previous_profession: str | None = None
     organization: str | None = None

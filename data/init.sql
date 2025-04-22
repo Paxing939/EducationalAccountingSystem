@@ -41,7 +41,7 @@ CREATE TABLE students (
     "practice_start_date" DATE,
     "practice_end_date" DATE,
     "end_date" DATE,
-    "exam_date" DATE,
+    "exam_date" VARCHAR(256),
     "profession" VARCHAR(256),
     "degree" INTEGER,
     "education_type_id" INTEGER REFERENCES education_types(id),

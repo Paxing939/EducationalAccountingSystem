@@ -1,8 +1,14 @@
 <template>
     <div>
+      <div>
+          <span>Поиск: </span>
+          <input type="text" v-model="searchValue" />
+      </div>
       <EditableTable
           :headers="headers"
           :items="items"
+          :search-field="searchField"
+          :search-value="searchValue"
           @updateField="updateItem($event.field, $event.id, $event.value)"
       >
       </EditableTable>
@@ -36,11 +42,14 @@ export default defineComponent({
       {text: 'Переподготовка разряд 6', value: 'category_6_re'},
       {text: 'Переподготовка разряд 7', value: 'category_7_re'},
       {text: 'Переподготовка разряд 8', value: 'category_8_re'},
+      {text: 'Повышение квалификации', value: 'advance'},
       {text: 'Название профессии в программе бондаренко', value: 'bondarenko', editable: true, width: 280},
       {text: 'Комментарии', value: 'comments', editable: true, width: 300},
     ];
 
     const items = ref<Item[]>([]);
+    const searchField = 'name';
+    const searchValue = ref<string>('');
 
     const loadProfessions = async () => {
         try {
@@ -66,6 +75,7 @@ export default defineComponent({
                       profession[`category_${category}_re`] = [term_re, profession_hours_re.theory_hours, profession_hours_re.practice_hours];
                   }
               }
+              profession['advance'] = [];
           }
           items.value = professions;
         } catch (error) {
@@ -87,6 +97,8 @@ export default defineComponent({
     return {
       headers,
       items,
+      searchField,
+      searchValue,
       updateItem,
     };
   },

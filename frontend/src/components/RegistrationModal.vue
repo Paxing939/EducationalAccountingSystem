@@ -28,15 +28,16 @@
             <input type="date" id="start_date" v-model="start_date" @blur="checkStartDate($event.target.value) ? undefined : this.start_date = ''">
             <label for="education_type_id">Тип обучения</label>
             <ModelListSelect
-                :list="education_types"
+                :list="getEducationTypes(profession_id)"
                 option-value="id"
                 option-text="name"
                 v-model="education_type_id"
                 id="education_type_id"
                 @update:modelValue="fillPreviousProfession()"
+                :isDisabled="this.education_id == 1"
             />
             <label for="birth_date">Дата рождения</label>
-            <input type="date" id="birth_date" v-model="birth_date">
+            <input type="date" id="birth_date" v-model="birth_date" @blur="checkBirthDate($event.target.value) ? undefined : this.birth_date = ''">
             <label for="education_id">Образование</label>
             <ModelListSelect
                 :list="educations"
@@ -44,6 +45,7 @@
                 option-text="name"
                 v-model="education_id"
                 id="education_id"
+                @update:modelValue="this.education_id == 1 ? this.education_type_id = 2 : undefined"
             />
             <label for="previous_profession">Профессия до обучения</label>
             <input type="text" id="previous_profession" v-model="previous_profession">
@@ -94,6 +96,7 @@ export default defineComponent({
         name: string;
         education_categories: string[];
         education_durations: number[];
+        retraining_only: boolean;
     }
 
     interface Education {
@@ -116,6 +119,7 @@ export default defineComponent({
     const professions = ref<Profession[]>([]);
     const educations = ref<Education[]>([]);
     const education_types = ref<EducationType[]>([]);
+    const education_types_retraining_only = ref<EducationType[]>([]);
     const professions_hours = ref<ProfessionsHours[]>([]);
     
     onMounted(async () => {
@@ -137,6 +141,7 @@ export default defineComponent({
           throw new Error('Network response was not ok ' + response.statusText);
         }
         education_types.value = await response.json();
+        education_types_retraining_only.value = education_types.value.filter(type => type.id != 1 && type.id != 4);
 
         response = await fetch('http://localhost:8001/professions_hours');
         if (!response.ok) {
@@ -147,6 +152,14 @@ export default defineComponent({
         console.error('Fetch error: ', error);
       }
     });
+
+    const getEducationTypes = (profession_id: number) => {
+        const profession = professions.value.find(profession => profession.id === profession_id);
+        if (profession) {
+            return profession.retraining_only ? education_types_retraining_only.value : education_types.value;
+        }
+        return education_types.value;
+    }
 
     const getProfessionCategories = (profession_id: number) => 
         professions.value.find(profession => profession.id === profession_id)?.education_categories.flatMap(c => c.split(',').map(c => ({ value: c.trim(), text: c.trim() }))) ?? [];
@@ -170,6 +183,7 @@ export default defineComponent({
         educations,
         education_types,
         professions_hours,
+        getEducationTypes,
         getProfessionCategories,
     };
   },
@@ -203,6 +217,20 @@ export default defineComponent({
             }
         }
     },
+    checkBirthDate(birth_date: string | Date) {
+        const date = moment(birth_date);
+        const today = moment();
+        const diff_days = today.diff(date, 'years', true);
+        if (diff_days > 100) {
+            alert('Дата рождения не может быть раньше 100 лет от текущей даты')
+            return false;
+        }
+        if (diff_days < 17.5) {
+            alert('Дата рождения не может быть позже 17 лет и 6 месяцев от текущей даты')
+            return false;
+        }
+        return true;
+    },
     async addStudent () {
         try {
             if (this.profession_id === 0) {
@@ -213,7 +241,7 @@ export default defineComponent({
                 throw new Error('Start date is invalid');
             }
             const profession = this.professions.find(profession => profession.id === this.profession_id);
-            const term = profession?.education_durations[profession?.education_categories.findIndex(c => c.includes(this.degree.toString()))] ?? 0;
+            const term = (profession?.education_durations[profession?.education_categories.findIndex(c => c.includes(this.degree.toString()))] ?? 0) * (this.education_type_id == 2 ? 0.6 : 1);
             const hours = this.professions_hours.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
             const theory_end_date = moment(this.start_date).businessAdd(hours.theory_hours - 2);
             const practice_start_date = theory_end_date.businessAdd(1);

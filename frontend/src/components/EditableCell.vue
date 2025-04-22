@@ -4,9 +4,8 @@
       v-if="isEditing"
       :value
       :type
-      @input="$emit('update', $event.target.value)"
-      @blur="isEditing = false"
-      @keyup.enter="isEditing = false"
+      @blur="stopEditing()"
+      @keyup.enter="stopEditing()"
     />
     <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : value }}</span>
   </div>
@@ -25,6 +24,11 @@ export default defineComponent({
       type: String,
       required: false,
       default: 'text',
+    },
+    match: {
+      type: String,
+      required: false,
+      default: '.*',
     }
   },
   setup() {
@@ -39,6 +43,17 @@ export default defineComponent({
       this.isEditing = true;
       await this.$nextTick();
       this.$el.querySelector('input').focus();
+    },
+    async stopEditing() {
+      this.isEditing = false;
+      const value = this.$el.querySelector('input').value;
+      if (new RegExp(this.match).test(value)) {
+        if (this.value != value) {
+          this.$emit('update', value);
+        }
+      } else {
+        alert('Неверный формат');
+      }
     },
   },
 });

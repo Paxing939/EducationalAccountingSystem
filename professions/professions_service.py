@@ -110,3 +110,11 @@ def get_profession(id: int):
     if db_profession is None:
         raise HTTPException(status_code=400, detail="Profession not found")
     return db_profession
+
+@app.get("/professions/by/name/{name}")
+def get_profession_by_name(name: str):
+    db = SessionLocal()
+    db_profession = db.query(Profession).filter(Profession.name == name).first()
+    if db_profession is None:
+        raise HTTPException(status_code=400, detail="Profession not found")
+    return db_profession

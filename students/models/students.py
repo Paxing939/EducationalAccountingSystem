@@ -35,7 +35,7 @@ class Student(Base):
     practice_start_date = Column(Date, nullable=True)
     practice_end_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
-    exam_date = Column(Date, nullable=True)
+    exam_date = Column(String(256), nullable=True)
     profession = Column(String(256))
     degree = Column(Integer)
     education_type_id = Column(Integer, ForeignKey(EducationType.id))
