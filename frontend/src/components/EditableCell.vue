@@ -4,10 +4,11 @@
       v-if="isEditing"
       :value
       :type
+      @input="$event.target.style.width = '0px'; $event.target.style.width = `${$event.target.scrollWidth}px`"
       @blur="stopEditing()"
       @keyup.enter="stopEditing()"
     />
-    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : value }}</span>
+    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : value }}{{ value ? postfix : '' }}</span>
   </div>
 </template>
 
@@ -29,7 +30,12 @@ export default defineComponent({
       type: String,
       required: false,
       default: '.*',
-    }
+    },
+    postfix: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
   setup() {
     const isEditing = ref(false);
@@ -42,32 +48,38 @@ export default defineComponent({
     async edit() {
       this.isEditing = true;
       await this.$nextTick();
-      this.$el.querySelector('input').focus();
+      const input = this.$el.querySelector('input');
+      input.style.width = '0px';
+      input.style.width = `${input.scrollWidth}px`;
+      if (this.type == 'date') {
+        input.style.minWidth = '100%';
+      }
+      input.focus();
     },
     async stopEditing() {
-      this.isEditing = false;
-      const value = this.$el.querySelector('input').value;
-      if (new RegExp(this.match).test(value)) {
-        if (this.value != value) {
-          this.$emit('update', value);
-        }
-      } else {
-        alert('Неверный формат');
+      if (this.isEditing) {
+          this.isEditing = false;
+          const value = this.$el.querySelector('input').value;
+          if (new RegExp(this.match).test(value)) {
+            if (this.value != value) {
+              this.$emit('update', value);
+            }
+          } else {
+            alert('Неверный формат');
+          }
       }
     },
   },
 });
+// Крановщик 6 разряд
 </script>
 
 <style>
 .input-wrapper {
-  display: flex;
-  align-items: center;
+    
 }
 
 .input-wrapper input {
-  flex: 1;
-  width: 100%;
   border: none;
   outline: none;
   background: none;
@@ -75,7 +87,6 @@ export default defineComponent({
 }
 
 .input-wrapper input:focus {
-    width: 100%;
 }
 
 .input-wrapper span {

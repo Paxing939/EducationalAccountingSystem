@@ -15,7 +15,7 @@ import {defineComponent, ref} from 'vue';
 
 export default defineComponent({
     setup() {
-        const tabs = ['Students', 'Professions'];
+        const tabs = ['Студенты', 'Профессии'];
         const activeTab = ref(0);
         return {
             tabs,

@@ -5,6 +5,11 @@
       :body-row-class-name="bodyRowClassName"
       :search-field="searchField"
       :search-value="searchValue"
+      :sort-by="sortBy"
+      :rows-items="rowsItems"
+      :rows-per-page="rowsPerPage"
+      :table-class-name="tableClassName"
+      @expand-row="$emit('expandRow', items[$event])"
       alternating
       border-cell
   > 
@@ -73,6 +78,22 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    sortBy: {
+      type: String,
+      default: '',
+    },
+    rowsItems: {
+      type: Array,
+      default: [25, 50, 100],
+    },
+    rowsPerPage: {
+      type: Number,
+      default: 25,
+    },
+    tableClassName: {
+      type: String,
+      default: '',
+    },
   },
   components: {
     EditableCell,
@@ -98,27 +119,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.input-wrapper {
-  padding: 2px;
-  box-sizing: border-box;
-  max-height: 3em !important;
-  overflow: hidden !important;
-  display: flex !important;
-  align-items: center !important;
-  line-height: 1.5 !important;
-  border: none !important;
-}
-
-.input-wrapper input {
-  box-sizing: border-box !important;
-  max-height: 100% !important;
-  width: 100% !important;
-  white-space: pre-wrap !important;
-  word-wrap: break-word !important;
-  line-height: inherit !important;
-  border: none !important;
-  outline: none !important;
-}
-</style>

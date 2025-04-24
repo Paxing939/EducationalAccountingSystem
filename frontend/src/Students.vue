@@ -1,12 +1,14 @@
 <template>
     <div style="position: relative;">
       <RegistrationModal v-if="showModal" @closeModal="closeRegistrationModal()" />
-      <button @click="showRegistrationModal()">Добавить слушателя</button>
+      <button style="margin: 10px;" @click="showRegistrationModal()">Добавить слушателя</button>
       <EditableTable
         :headers="headers"
         :items="items"
         :body-row-class-name="rowEditedStyle"
-        @updateField="updateItem($event.field, $event.id, $event.value)"
+        sort-by="id"
+        @update-field="updateItem($event.field, $event.id, $event.value)"
+        @expand-row="graduating.includes($event.id) ? graduating.splice(graduating.indexOf($event.id), 1) : undefined"
       >
           <template #expand="item">
               <div class="expand-container">
@@ -16,9 +18,9 @@
                       <button @click="deleteData(item.id)">Удалить запись</button>
                       <button @click="calculateDates(item.id)">Рассчитать даты обучения</button>
                       <button @click="calculateDefaultDates(item.id)">Даты обучения по умолчанию</button>
-                      <button @click="graduating.push(item.id)">Выпуск</button>
+                      <button @click="graduating.includes(item.id) ? graduating.splice(graduating.indexOf(item.id), 1) : graduating.push(item.id)">Выпуск</button>
                   </div>
-                  <div v-if="graduating.includes(item.id)" style="display: flex; flex-direction: column; gap: 10px; width: 200px;">
+                  <div v-if="graduating.includes(item.id)" style="display: flex; gap: 10px; width: 200px;">
                       <label for="start_date">Начало обучения</label>
                       <input type="date" id="start_date" :value="item.start_date" />
                       <label for="end_date">Окончание обучения</label>
@@ -27,16 +29,16 @@
                       <input type="text" id="full_name" :value="item.full_name" />
                       <label for="education_type_id">Тип обучения</label>
                       <select id="education_type_id">
-                          <option v-for="education_type in education_types" :value="education_type.id" :selected="education_type.id == item.education_type_id">{{ education_type.name }}</option>
+                          <option v-for="education_type in education_types" :value="education_type.id" :selected="education_type.id == item.education_type_id">{{ education_type.text }}</option>
                       </select>
                       <label for="profession">Профессия_Рус</label>
                       <input type="text" id="profession" :value="item.profession" />
                       <label for="degree">Разряд</label>
                       <input type="number" id="degree" :value="item.degree" />
                       <label for="grade_1">Оценка 1</label>
-                      <input type="number" id="grade_1" :value="item.grade_1" />
+                      <input type="number" id="grade_1" :value="item.grade_1 ?? 8" />
                       <label for="grade_2">Оценка 2</label>
-                      <input type="number" id="grade_2" :value="item.grade_2" />
+                      <input type="number" id="grade_2" :value="item.grade_2 ?? 8" />
                       <label for="full_name_bel">ФИО_Бел</label>
                       <input type="text" id="full_name_bel" :value="item.full_name_bel" />
                       <label for="profession_bel">Профессия_Бел</label>
@@ -65,6 +67,12 @@
           <template #item-status="item">
               <SelectableCell :options="student_statuses" :value="item.status" @update="updateItem('status', item.id, $event)" />
           </template>
+          <template #item-payments="item">
+              <PaymentsCell :value="item.payments" @update="updateItem('payments', item.id, $event)" />
+          </template>
+          <template #item-total_payments="item">
+              <span style="font-weight: bold;">{{ item.payments.reduce((aac, payment) => aac + payment.amount, 0) }}</span>
+          </template>
       </EditableTable>
   </div>
 </template>
@@ -82,6 +90,7 @@ import type { SelectOption } from "./components/SelectableCell.vue";
 import SelectableCell from "./components/SelectableCell.vue";
 import moment from 'moment-business-days';
 import Holidays from 'date-holidays';
+import PaymentsCell from "./components/PaymentsCell.vue";
 
 const holidays = new Holidays('BY');
 moment.updateLocale('ru', {
@@ -118,10 +127,12 @@ export default defineComponent({
       {text: '№ прот.', value: 'protocol_number', sortable: true},
       {text: 'Свидетельство', value: 'certificate_number', sortable: true},
       {text: 'Рег №', value: 'grad_id', sortable: true},
-      {text: 'Теория, часы', value: 'theory_hours', editable: true},
-      {text: 'Практика, часы', value: 'practice_hours', editable: true},
+      {text: 'Теория, дни', value: 'theory_hours', editable: true},
+      {text: 'Практика, дни', value: 'practice_hours', editable: true},
       {text: 'Организация для прохождения практики', value: 'practice_organization', editable: true, width: 350},
       {text: 'Статус', value: 'status', sortable: true},
+      {text: 'Платежи', value: 'payments'},
+      {text: 'Всего оплачено', value: 'total_payments'},
       {text: 'Комментарии', value: 'comments', editable: true, width: 350},
     ];
 
@@ -156,6 +167,9 @@ export default defineComponent({
             throw new Error('Network response was not ok ' + response.statusText);
           }
           items.value = await response.json();
+          for (const item of items.value) {
+            item.payments = item.payments ?? [];
+          }
         } catch (error) {
           console.error('Fetch error: ', error);
         }
@@ -314,12 +328,15 @@ export default defineComponent({
         try {
             const item = items.value.find(item => item.id === id);
             if (item) {
+                const entity = JSON.parse(JSON.stringify(item));
+                delete entity.education_categories;
+                entity.comments = entity.comments ?? '';
                 const response = await fetch('http://localhost:8000/students/edit', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(item),
+                    body: JSON.stringify(entity),
                 });
                 data_sent.value = true;
                 if (!response.ok) {
@@ -360,6 +377,8 @@ export default defineComponent({
         if (item) {
             const term = item.term;
             const hours = professions_hours.value.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
+            item.theory_hours = hours.theory_hours;
+            item.practice_hours = hours.practice_hours;
             item.theory_end_date = moment(item.start_date).businessAdd(hours.theory_hours - 2);
             item.practice_start_date = item.theory_end_date.businessAdd(1);
             item.practice_end_date = item.practice_start_date.businessAdd(hours.practice_hours - 1);
@@ -428,6 +447,7 @@ export default defineComponent({
     EditableTable,
     DropdownCell,
     SelectableCell,
+    PaymentsCell,
   },
 });
 </script>

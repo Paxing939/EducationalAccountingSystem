@@ -49,27 +49,4 @@ export default defineComponent({
 </script>
 
 <style>
-.input-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.input-wrapper select {
-  flex: 1;
-  width: 100%;
-  border: none;
-  outline: none;
-  background: none;
-  font: inherit;
-}
-
-.input-wrapper select:focus {
-    width: 100%;
-}
-
-.input-wrapper span {
-  display: inline-block;
-  width: 100%;
-  padding: 4px;
-}
 </style>

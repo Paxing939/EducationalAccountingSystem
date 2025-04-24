@@ -58,17 +58,6 @@ export default defineComponent({
 </script>
 
 <style>
-.input-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.input-wrapper span {
-  display: inline-block;
-  width: 100%;
-  padding: 4px;
-}
-
 .dropdown-modal {
     min-height: 30%;
     min-width: 400px;
