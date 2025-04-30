@@ -1,7 +1,7 @@
 <template>
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; gap: 10px;">
-            <button v-for="(tab, index) in tabs" :key="index" @click="activeTab = index" :disabled="activeTab == index">{{ tab }}</button>
+    <div class="page">
+        <div class="tabs">
+            <div :class="{'tab': true, 'active': activeTab == index}" v-for="(tab, index) in tabs" @click="activeTab = index">{{ tab }}</div>
         </div>
         <div>
             <Students v-if="activeTab == 0" />
@@ -26,4 +26,37 @@ export default defineComponent({
 </script>
 
 <style>
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.tabs {
+    display: flex;
+    width: 100%;
+    background: #ccc;
+}
+
+.tab {
+    width: 100px;
+    padding: 10px;
+    border-right: 1px solid #aaa;
+    font-size: 14px;
+    text-align: center;
+}
+
+.tab:hover {
+    background: #ddd;
+    cursor: pointer;
+}
+
+.tab.active {
+    background: #fff;
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 </style>

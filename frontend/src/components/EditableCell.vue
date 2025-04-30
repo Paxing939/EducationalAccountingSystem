@@ -4,11 +4,12 @@
       v-if="isEditing"
       :value
       :type
-      @input="$event.target.style.width = '0px'; $event.target.style.width = `${$event.target.scrollWidth}px`"
+      @input="type == 'text' ? input($event) : undefined"
       @blur="stopEditing()"
       @keyup.enter="stopEditing()"
+      :checked="type == 'checkbox' && value"
     />
-    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : value }}{{ value ? postfix : '' }}</span>
+    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : (type == 'checkbox' ? (value ? 'да' : '') : value) }}{{ value ? postfix : '' }}</span>
   </div>
 </template>
 
@@ -49,17 +50,16 @@ export default defineComponent({
       this.isEditing = true;
       await this.$nextTick();
       const input = this.$el.querySelector('input');
-      input.style.width = '0px';
-      input.style.width = `${input.scrollWidth}px`;
-      if (this.type == 'date') {
-        input.style.minWidth = '100%';
+      if (this.type == 'text') {
+          input.style.width = '0px';
+          input.style.width = `${input.scrollWidth}px`;
       }
       input.focus();
     },
     async stopEditing() {
       if (this.isEditing) {
           this.isEditing = false;
-          const value = this.$el.querySelector('input').value;
+          const value = this.type == 'checkbox' ? this.$el.querySelector('input').checked : this.$el.querySelector('input').value;
           if (new RegExp(this.match).test(value)) {
             if (this.value != value) {
               this.$emit('update', value);
@@ -69,9 +69,12 @@ export default defineComponent({
           }
       }
     },
+    input(event: any) {
+        event.target.style.width = '0px';
+        event.target.style.width = `${event.target.scrollWidth}px`
+    },
   },
 });
-// Крановщик 6 разряд
 </script>
 
 <style>

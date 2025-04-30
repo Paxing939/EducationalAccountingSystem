@@ -34,6 +34,12 @@ class Profession(Base):
     education_durations = Column(ARRAY(String), nullable=True)
     education_categories = Column(ARRAY(String))
     retraining_only = Column(Boolean, default=False)
+    advance_duration = Column(Float, nullable=True)
+    bondarenko = Column(String, nullable=True)
+    name_bel = Column(String, nullable=True)
+    has_google_link = Column(Boolean, default=False)
+    has_grades = Column(Boolean, default=False)
+    has_diary = Column(Boolean, default=False)
 
 class ProfessionsHours(Base):
     __tablename__ = "professions_hours"
@@ -48,6 +54,12 @@ Base.metadata.create_all(bind=engine)
 class ProfessionBase(BaseModel):
     education_durations: list[str] | None = None
     retraining_only: bool = False
+    advance_duration: float | None = None
+    bondarenko: str | None = None
+    name_bel: str | None = None
+    has_google_link: bool = False
+    has_grades: bool = False
+    has_diary: bool = False
 
 class ProfessionCreate(ProfessionBase):
     code: str
@@ -87,6 +99,12 @@ def edit_profession(profession: ProfessionUpdate):
         db_profession.education_categories = profession.education_categories
     db_profession.education_durations = profession.education_durations
     db_profession.retraining_only = profession.retraining_only
+    db_profession.advance_duration = profession.advance_duration
+    db_profession.bondarenko = profession.bondarenko
+    db_profession.name_bel = profession.name_bel
+    db_profession.has_google_link = profession.has_google_link
+    db_profession.has_grades = profession.has_grades
+    db_profession.has_diary = profession.has_diary
     db.commit()
     db.refresh(db_profession)
     return db_profession

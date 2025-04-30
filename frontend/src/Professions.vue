@@ -24,10 +24,22 @@
                 </div>
             </div>
         </template>
-        <template v-for="header in headers.slice(2, -2)" #[`item-${header.value}`]="item">
+        <template v-for="header in headers.slice(2, 10)" #[`item-${header.value}`]="item">
             <div class="terms-wrapper">
                 <EditableCell :value="item[header.value][0]" @update="updateDuration(item.id, header.value.slice(9, 10), $event)" postfix=" мес." />
                 <span v-for="val in item[header.value].slice(1)">{{ val }}</span>
+            </div>
+        </template>
+        <template v-for="header in headers.slice(10, -7)" #[`item-${header.value}`]="item">
+            <div class="terms-wrapper">
+                <span>{{ item[header.value][0] ? item[header.value][0] + ' мес.' : ''}}</span>
+                <span v-for="val in item[header.value].slice(1)">{{ val }}</span>
+            </div>
+        </template>
+        <template #item-advance="item">
+            <div class="terms-wrapper">
+                <EditableCell :value="item.advance[0]" @update="updateItem('advance', item.id, $event)" postfix=" мес." />
+                <span v-for="val in item.advance.slice(1)">{{ val }}</span>
             </div>
         </template>
       </EditableTable>
@@ -44,8 +56,8 @@ export default defineComponent({
   setup() {
 
     const headers: EditableTableHeader[] = [
-      {text: 'Номер', value: 'id', sortable: true},
-      {text: 'Название профессии', value: 'name', sortable: true, width: 400, editable: true},
+      {text: 'Номер', value: 'id', fixed: true, sortable: true},
+      {text: 'Название профессии', value: 'name', sortable: true, width: 400, fixed: true, editable: true},
       {text: 'Подготовка разряд 1', value: 'category_1'},
       {text: 'Подготовка разряд 2', value: 'category_2'},
       {text: 'Подготовка разряд 3', value: 'category_3'},
@@ -64,6 +76,10 @@ export default defineComponent({
       {text: 'Переподготовка разряд 8', value: 'category_8_re'},
       {text: 'Повышение квалификации', value: 'advance'},
       {text: 'Название профессии в программе бондаренко', value: 'bondarenko', editable: true, width: 280},
+      {text: 'Белорусское Название профессии', value: 'name_bel', editable: true, width: 200},
+      {text: 'Есть гугл ссылка', value: 'has_google_link', editable: true, type: 'checkbox'},
+      {text: 'Есть зачеты', value: 'has_grades', editable: true, type: 'checkbox'},
+      {text: 'Есть дневник', value: 'has_diary', editable: true, type: 'checkbox'},
       {text: 'Комментарии', value: 'comments', editable: true, width: 300},
     ];
 
@@ -85,7 +101,7 @@ export default defineComponent({
         [key: string]: any
     };
 
-    const parseProfessionCategories = async (profession) => {
+    const parseProfessionCategories = async (profession: Profession | Item) => {
         try {
           if (hours.value.length == 0) {
               const hours_response = await fetch('http://localhost:8001/professions_hours');
@@ -94,14 +110,14 @@ export default defineComponent({
               }
               hours.value = await hours_response.json();
           }
-          const categories = profession.education_categories.flatMap(c => c.split(',')) ?? [];
+          const categories = profession.education_categories.flatMap((c: string) => c.split(',')) ?? [];
+          for (var i = 1; i <= 8; i++) {
+              profession[`category_${i}`] = ['', '', ''];
+              profession[`category_${i}_re`] = ['', '', ''];
+          }
           for (const category of categories) {
-              for (var i = 1; i <= 8; i++) {
-                  profession[`category_${i}`] = ['', '', ''];
-                  profession[`category_${i}_re`] = ['', '', ''];
-              }
               if (profession.education_durations) {
-                  const term = parseFloat(profession.education_durations[profession.education_categories.findIndex(c => c.includes(category))]) ?? 0;
+                  const term = parseFloat(profession.education_durations[profession.education_categories.findIndex((c: string) => c.includes(category))]) ?? 0;
                   const profession_hours = hours.value.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
                   const term_re = +(term * 0.6).toFixed(1);
                   const profession_hours_re = hours.value.find(hours => hours.duration == term_re) ?? { theory_hours: 0, practice_hours: 0 };
@@ -109,7 +125,13 @@ export default defineComponent({
                   profession[`category_${category}_re`] = [term_re, profession_hours_re.theory_hours, profession_hours_re.practice_hours];
               }
           }
-          profession['advance'] = ['', '', ''];
+          if (profession.advance) {
+              const advance_hours = hours.value.find(hours => hours.duration == profession.advance) ?? { theory_hours: 0, practice_hours: 0 };
+              profession['advance'] = [profession.advance, advance_hours.theory_hours, advance_hours.practice_hours];
+          }
+          else {
+              profession['advance'] = ['', '', ''];
+          }
         } catch (error) {
             console.error('Fetch error: ', error);
         }
@@ -142,21 +164,19 @@ export default defineComponent({
         if (!modified_items.value.includes(id)) {
           modified_items.value.push(id);
         }
+        if (field == 'advance') {
+          parseProfessionCategories(item);
+        }
       }
     };
 
     const updateDuration = async (id: number, category: string, value: number) => {
       const item = items.value.find(item => item.id === id);
       if (item) {
-        const index = item.education_categories.findIndex(c => c.includes(category));
+        const index = item.education_categories.findIndex((c: string) => c.includes(category));
         if (index == -1) {
-          console.log(item.education_categories);
-          console.log(item.education_durations);
-          console.log('');
           item.education_categories.push(category);
           item.education_durations.push(value);
-          console.log(item.education_categories);
-          console.log(item.education_durations);
         }
         else {
           item.education_durations[index] = value;
