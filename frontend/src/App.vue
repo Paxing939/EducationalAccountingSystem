@@ -4,8 +4,9 @@
             <div :class="{'tab': true, 'active': activeTab == index}" v-for="(tab, index) in tabs" @click="activeTab = index">{{ tab }}</div>
         </div>
         <div>
-            <Students v-if="activeTab == 0" />
+            <Students :graduating_students="graduating_students" v-if="activeTab == 0" />
             <Professions v-if="activeTab == 1" />
+            <Graduation :students="graduating_students" v-if="activeTab == 2" />
         </div>
     </div>
 </template>
@@ -15,11 +16,13 @@ import {defineComponent, ref} from 'vue';
 
 export default defineComponent({
     setup() {
-        const tabs = ['Студенты', 'Профессии'];
+        const tabs = ['Слушатели', 'Профессии', 'Выпуск'];
         const activeTab = ref(0);
+        const graduating_students = ref([]);
         return {
             tabs,
             activeTab,
+            graduating_students,
         };
     },
 });

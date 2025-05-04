@@ -19,7 +19,6 @@ import { defineComponent, ref } from 'vue';
 export default defineComponent({
   props: {
     value: {
-      type: String,
       required: true,
     },
     type: {

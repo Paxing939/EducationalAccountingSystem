@@ -19,36 +19,39 @@
                       <button @click="calculateDates(item.id)">Рассчитать даты обучения</button>
                       <button @click="calculateDefaultDates(item.id)">Даты обучения по умолчанию</button>
                       <button @click="graduating.includes(item.id) ? graduating.splice(graduating.indexOf(item.id), 1) : graduating.push(item.id)">Выпуск</button>
+                      <label v-if="graduating.includes(item.id)" >Текущий выпуск
+                          <input type="checkbox" :checked="graduating_students.map(s => s.id).includes(item.id)" @change="$event.target.checked ? graduate(item) : graduating_students.splice(graduating_students.map(s => s.id).indexOf(item.id), 1)" />
+                      </label>
                   </div>
                   <div v-if="graduating.includes(item.id)" style="display: flex; gap: 10px; width: 200px;">
                       <label for="start_date">Начало обучения</label>
-                      <input type="date" id="start_date" :value="item.start_date" />
+                      <input type="date" id="start_date" v-model="graduatingStudent(item).start_date" />
                       <label for="end_date">Окончание обучения</label>
-                      <input type="date" id="end_date" :value="item.end_date" />
+                      <input type="date" id="end_date" v-model="graduatingStudent(item).end_date" />
                       <label for="full_name">ФИО_Рус</label>
-                      <input type="text" id="full_name" :value="item.full_name" />
+                      <input type="text" id="full_name" v-model="graduatingStudent(item).full_name" />
                       <label for="education_type_id">Тип обучения</label>
-                      <select id="education_type_id">
-                          <option v-for="education_type in education_types" :value="education_type.id" :selected="education_type.id == item.education_type_id">{{ education_type.text }}</option>
+                      <select id="education_type_id" @change="graduatingStudent(item).education_type_id = parseInt($event.target.value)">
+                          <option v-for="education_type in education_types" :value="education_type.value" :selected="education_type.value == graduatingStudent(item).education_type_id">{{ education_type.text }}</option>
                       </select>
                       <label for="profession">Профессия_Рус</label>
-                      <input type="text" id="profession" :value="item.profession" />
+                      <input type="text" id="profession" v-model="graduatingStudent(item).profession" />
                       <label for="degree">Разряд</label>
-                      <input type="number" id="degree" :value="item.degree" />
+                      <input type="number" id="degree" v-model="graduatingStudent(item).degree" />
                       <label for="grade_1">Оценка 1</label>
-                      <input type="number" id="grade_1" :value="item.grade_1 ?? 8" />
+                      <input type="number" id="grade_1" v-model="graduatingStudent(item).grade_1" />
                       <label for="grade_2">Оценка 2</label>
-                      <input type="number" id="grade_2" :value="item.grade_2 ?? 8" />
+                      <input type="number" id="grade_2" v-model="graduatingStudent(item).grade_2" />
                       <label for="full_name_bel">ФИО_Бел</label>
-                      <input type="text" id="full_name_bel" :value="item.full_name_bel" />
+                      <input type="text" id="full_name_bel" v-model="graduatingStudent(item).full_name_bel" />
                       <label for="profession_bel">Профессия_Бел</label>
-                      <input type="text" id="profession_bel" :value="item.profession_bel" />
+                      <input type="text" id="profession_bel" v-model="graduatingStudent(item).profession_bel" />
                       <label for="protocol_number">Протокол</label>
-                      <input type="text" id="protocol_number" :value="item.protocol_number" />
+                      <input type="text" id="protocol_number" v-model="graduatingStudent(item).protocol_number" />
                       <label for="grad_id">Рег. №</label>
-                      <input type="text" id="grad_id" :value="item.grad_id" />
+                      <input type="text" id="grad_id" v-model="graduatingStudent(item).grad_id" />
                       <label for="certificate_number">Свидетельство №</label>
-                      <input type="text" id="certificate_number" :value="item.certificate_number" />
+                      <input type="text" id="certificate_number" v-model="graduatingStudent(item).certificate_number" />
                   </div>
               </div>
           </template>
@@ -78,7 +81,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, ref} from 'vue';
+import {defineComponent, onMounted, ref, PropType} from 'vue';
 import type {Header, Item} from "vue3-easy-data-table";
 import EditableCell from "./components/EditableCell.vue";
 import RegistrationModal from "./components/RegistrationModal.vue";
@@ -100,6 +103,12 @@ moment.updateLocale('ru', {
 });
 
 export default defineComponent({
+  props: {
+    graduating_students: {
+      type: Array as PropType<Item[]>,
+      required: true,
+    },
+  },
   setup() {
 
     const headers: EditableTableHeader[] = [
@@ -169,6 +178,9 @@ export default defineComponent({
           items.value = await response.json();
           for (const item of items.value) {
             item.payments = item.payments ?? [];
+            item.grade_1 = item.grade_1 ?? 8;
+            item.grade_2 = item.grade_2 ?? 8;
+            item.comments = item.comments ?? '';
           }
         } catch (error) {
           console.error('Fetch error: ', error);
@@ -330,7 +342,6 @@ export default defineComponent({
             if (item) {
                 const entity = JSON.parse(JSON.stringify(item));
                 delete entity.education_categories;
-                entity.comments = entity.comments ?? '';
                 const response = await fetch('http://localhost:8000/students/edit', {
                     method: 'POST',
                     headers: {
@@ -448,6 +459,17 @@ export default defineComponent({
     DropdownCell,
     SelectableCell,
     PaymentsCell,
+  },
+  methods: {
+    graduate(student: Object) {
+      this.graduating_students.push(student);
+    },
+    graduatingStudent (item: Item) {
+        if (this.graduating_students.map(s => s.id).includes(item.id)) {
+            return this.graduating_students.find(s => s.id == item.id);
+        }
+        return item;
+    },
   },
 });
 </script>
