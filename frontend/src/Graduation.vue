@@ -305,10 +305,9 @@ export default defineComponent({
         },
         async graduateAll() {
             if (this.checkAll()) {
-                while (this.students.length) {
-                    const student = this.students.shift();
-                    if (student) {
-                        this.graduate(student.id);
+                for (const id of this.students.map(s => s.id)) {
+                    if (id) {
+                        this.graduate(id);
                     }
                 }
             }
