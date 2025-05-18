@@ -2,7 +2,7 @@ import pandas as pd
 from .database import ProfessionsHours
 
 def get_hours(path: str) -> list[ProfessionsHours]:
-    df = pd.read_excel(path)
+    df = pd.read_excel(path, 'Лист6')
     hours = []
     for index, row in df.iterrows():
         duration = float(row[0])

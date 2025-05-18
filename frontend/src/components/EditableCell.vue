@@ -7,9 +7,15 @@
       @input="type == 'text' ? input($event) : undefined"
       @blur="stopEditing()"
       @keyup.enter="stopEditing()"
-      :checked="type == 'checkbox' && value"
+      :checked="type == 'checkbox' ? Boolean(value) : undefined"
     />
-    <span v-else>{{ type == 'date' && value ? new Date(value).toLocaleDateString() : (type == 'checkbox' ? (value ? 'да' : '') : value) }}{{ value ? postfix : '' }}</span>
+    <span v-else>
+      {{
+        type == 'date' && value && typeof value === 'string'
+          ? new Date(value).toLocaleDateString('ru-RU')
+          : (type == 'checkbox' ? (value ? 'да' : '') : value)
+      }}{{ value ? postfix : '' }}
+    </span>
   </div>
 </template>
 

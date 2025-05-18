@@ -17,6 +17,12 @@ class Profession(Base):
     education_durations = Column(ARRAY(String), nullable=True)
     education_categories = Column(ARRAY(String))
     retraining_only = Column(Boolean, default=False)
+    advance_duration = Column(Float, nullable=True)
+    bondarenko = Column(String, nullable=True)
+    name_bel = Column(String, nullable=True)
+    has_google_link = Column(Boolean, default=False)
+    has_grades = Column(Boolean, default=False)
+    has_diary = Column(Boolean, default=False)
 
 class ProfessionsHours(Base):
     __tablename__ = "professions_hours"
@@ -44,3 +50,4 @@ def add_hours(hours: list[ProfessionsHours]):
     db.add_all(hours)
     db.commit()
     print(f"Added {len(hours)} entries to the database")
+

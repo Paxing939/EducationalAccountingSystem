@@ -101,15 +101,8 @@ export default defineComponent({
         [key: string]: any
     };
 
-    const parseProfessionCategories = async (profession: Profession | Item) => {
+    const parseProfessionCategories = (profession: Profession | Item, hoursData: {duration: number, theory_hours: number, practice_hours: number}[]) => {
         try {
-          if (hours.value.length == 0) {
-              const hours_response = await fetch('http://localhost:8001/professions_hours');
-              if (!hours_response.ok) {
-                throw new Error('Network response was not ok ' + hours_response.statusText);
-              }
-              hours.value = await hours_response.json();
-          }
           const categories = profession.education_categories.flatMap((c: string) => c.split(',')) ?? [];
           for (var i = 1; i <= 8; i++) {
               profession[`category_${i}`] = ['', '', ''];
@@ -118,15 +111,15 @@ export default defineComponent({
           for (const category of categories) {
               if (profession.education_durations) {
                   const term = parseFloat(profession.education_durations[profession.education_categories.findIndex((c: string) => c.includes(category))]) ?? 0;
-                  const profession_hours = hours.value.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
+                  const profession_hours = hoursData.find(hours => hours.duration == term) ?? { theory_hours: 0, practice_hours: 0 };
                   const term_re = +(term * 0.6).toFixed(1);
-                  const profession_hours_re = hours.value.find(hours => hours.duration == term_re) ?? { theory_hours: 0, practice_hours: 0 };
+                  const profession_hours_re = hoursData.find(hours => hours.duration == term_re) ?? { theory_hours: 0, practice_hours: 0 };
                   profession[`category_${category}`] = [term, profession_hours.theory_hours, profession_hours.practice_hours];
                   profession[`category_${category}_re`] = [term_re, profession_hours_re.theory_hours, profession_hours_re.practice_hours];
               }
           }
           if (profession.advance) {
-              const advance_hours = hours.value.find(hours => hours.duration == profession.advance) ?? { theory_hours: 0, practice_hours: 0 };
+              const advance_hours = hoursData.find(hours => hours.duration == profession.advance) ?? { theory_hours: 0, practice_hours: 0 };
               profession['advance'] = [profession.advance, advance_hours.theory_hours, advance_hours.practice_hours];
           }
           else {
@@ -139,13 +132,21 @@ export default defineComponent({
 
     const loadProfessions = async () => {
         try {
-          const professions_response = await fetch('http://localhost:8001/professions');
+          const [professions_response, hours_response] = await Promise.all([
+            fetch('http://localhost:8001/professions'),
+            fetch('http://localhost:8001/professions_hours')
+          ]);
           if (!professions_response.ok) {
             throw new Error('Network response was not ok ' + professions_response.statusText);
           }
+          if (!hours_response.ok) {
+            throw new Error('Network response was not ok ' + hours_response.statusText);
+          }
           const professions: [] = await professions_response.json();
+          const hoursData = await hours_response.json();
+          hours.value = hoursData;
           for (const profession of professions) {
-            await parseProfessionCategories(profession);
+            parseProfessionCategories(profession, hoursData);
           }
           items.value = professions;
         } catch (error) {
@@ -165,7 +166,7 @@ export default defineComponent({
           modified_items.value.push(id);
         }
         if (field == 'advance') {
-          parseProfessionCategories(item);
+          parseProfessionCategories(item, hours.value);
         }
       }
     };
@@ -181,7 +182,7 @@ export default defineComponent({
         else {
           item.education_durations[index] = value;
         }
-        await parseProfessionCategories(item);
+        parseProfessionCategories(item, hours.value);
         if (!modified_items.value.includes(id)) {
           modified_items.value.push(id);
         }

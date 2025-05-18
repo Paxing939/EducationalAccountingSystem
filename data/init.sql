@@ -68,6 +68,29 @@ CREATE TABLE students (
     "profession_bel" VARCHAR(256)
 );
 
+CREATE TABLE professions (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR,
+    name VARCHAR,
+    etks VARCHAR,
+    education_durations VARCHAR[] NULL,
+    education_categories VARCHAR[] NOT NULL,
+    retraining_only BOOLEAN DEFAULT FALSE,
+    advance_duration DOUBLE PRECISION NULL,
+    bondarenko VARCHAR NULL,
+    name_bel VARCHAR NULL,
+    has_google_link BOOLEAN DEFAULT FALSE,
+    has_grades BOOLEAN DEFAULT FALSE,
+    has_diary BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE professions_hours (
+    id SERIAL PRIMARY KEY,
+    duration DOUBLE PRECISION,
+    theory_hours INTEGER,
+    practice_hours INTEGER
+);
+
 COPY students(referrer_organization,"group",full_name,term,start_date,theory_end_date,practice_start_date,practice_end_date,end_date,profession,degree,education_type_id,"login",email,birth_date,education_id,previous_profession,payment,organization,theory_hours,practice_hours,practice_organization,status,comments)
 FROM '/docker-entrypoint-initdb.d/students.csv'
 DELIMITER ','
