@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
-from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Date, Float, ARRAY, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.declarative import declarative_base
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import sessionmaker
-from datetime import date
+from sqlalchemy import create_engine
+from schemas.students import *
+from models.students import *
 import requests
+import re
 
 db_name = 'students_db'
 db_user = 'user'
@@ -16,104 +16,20 @@ db_port = '5432'
 # Connect to the database
 DATABASE_URL = 'postgresql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
 
-Base = declarative_base()
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-class EducationType(Base):
-    __tablename__ = "education_types"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(256))
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class Education(Base):
-    __tablename__ = "educations"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(256))
-
-class Student(Base):
-    __tablename__ = "students"
-    id = Column(Integer, primary_key=True, index=True)
-    referrer_organization = Column(String(256), nullable=True)
-    group = Column(String(10))
-    full_name = Column(String(128))
-    term = Column(Float)
-    start_date = Column(Date)
-    theory_end_date = Column(Date, nullable=True)
-    practice_start_date = Column(Date, nullable=True)
-    practice_end_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
-    exam_date = Column(Date, nullable=True)
-    profession = Column(String(256))
-    category = Column(Integer)
-    education_type_id = Column(Integer, ForeignKey(EducationType.id))
-    login = Column(String(128))
-    email = Column(String(128), nullable=True)
-    birth_date = Column(Date)
-    education_id = Column(Integer, ForeignKey(Education.id))
-    previous_profession = Column(String(256), nullable=True)
-    payment = Column(Float)
-    organization = Column(String(256), nullable=True)
-    protocol_number = Column(String(20))
-    certificate_number = Column(String(20), nullable=True)
-    grad_id = Column(Integer, nullable=True)
-    theory_hours = Column(Integer, default=0)
-    practice_hours = Column(Integer, default=0)
-    practice_organization = Column(String(256), nullable=True)
-    status = Column(Integer, default=0)
-    payments = Column(ARRAY(JSONB), default=[])
-    comments = Column(String(256), default='')
-    graduation_date = Column(Date, nullable=True)
-    grade_1 = Column(Integer, nullable=True)
-    grade_2 = Column(Integer, nullable=True)
-    full_name_bel = Column(String(128))
-    profession_bel = Column(String(256))
-
-
-Base.metadata.create_all(bind=engine)
-
-class StudentPayment(BaseModel):
-    date: date
-    amount: float
-
-class StudentBase(BaseModel):
-    referrer_organization: str | None = None
-    theory_end_date: date | None = None
-    practice_start_date: date | None = None
-    practice_end_date: date | None = None
-    end_date: date | None = None
-    exam_date: date | None = None
-    email: str | None = None
-    previous_profession: str | None = None
-    organization: str | None = None
-    certificate_number: str | None = None
-    grad_id: int | None = None
-    practice_organization: str | None = None
-    graduation_date: date | None = None
-    grade_1: int | None = None
-    grade_2: int | None = None
-    payments: list[StudentPayment] = []
-    theory_hours: int = 0
-    practice_hours: int = 0
-    status: int = 0
-    comments: str = ''
-
-class StudentCreate(StudentBase):
-    group: str
-    full_name: str
-    term: float
-    start_date: date
-    profession: str
-    category: int
-    education_type_id: int
-    login: str
-    birth_date: date
-    education_id: int
-    payment: float
-    protocol_number: str
-    full_name_bel: str
-    profession_bel: str
 
 def authenticate_user(username: str, password: str):
     auth_service_url = "http://auth_service:8002/login"
@@ -124,11 +40,12 @@ def authenticate_user(username: str, password: str):
     auth_headers = {
         "Content-Type": "application/json"
     }
-    response = requests.post(auth_service_url, json = auth_payload, headers=auth_headers)
+    response = requests.post(auth_service_url, json=auth_payload, headers=auth_headers)
     if response.status_code == 200:
         return response.json()
     else:
         raise HTTPException(status_code=401, detail="Authentication failed")
+
 
 @app.post("/students/create")
 def create_student(student: StudentCreate):
@@ -138,30 +55,15 @@ def create_student(student: StudentCreate):
     if db.query(Education).filter(Education.id == student.education_id).first() is None:
         raise HTTPException(status_code=400, detail="Invalid education id")
     student.payments = [payment.model_dump(mode='json') for payment in student.payments]
+    student.full_name = re.sub(' +', ' ', student.full_name.strip())
     db_student = Student(**student.dict())
     db.add(db_student)
     db.commit()
     db.refresh(db_student)
     return db_student
 
-class StudentUpdate(StudentBase):
-    id: int
-    group: str | None = None
-    full_name: str | None = None
-    term: float | None = None
-    start_date: date | None = None
-    profession: str | None = None
-    category: int | None = None
-    education_type_id: int | None = None
-    login: str | None = None
-    birth_date: date | None = None
-    education_id: int | None = None
-    payment: float | None = None
-    protocol_number: str | None = None
-    full_name_bel: str | None = None
-    profession_bel: str | None = None
 
-@app.get("/students/edit")
+@app.post("/students/edit")
 def edit_student(student: StudentUpdate):
     db = SessionLocal()
     db_student = db.query(Student).filter(Student.id == student.id).first()
@@ -170,15 +72,15 @@ def edit_student(student: StudentUpdate):
     if student.group:
         db_student.group = student.group
     if student.full_name:
-        db_student.full_name = student.full_name
+        db_student.full_name = re.sub(' +', ' ', student.full_name.strip())
     if student.term:
         db_student.term = student.term
     if student.start_date:
         db_student.start_date = student.start_date
     if student.profession:
         db_student.profession = student.profession
-    if student.category:
-        db_student.category = student.category
+    if student.degree:
+        db_student.degree = student.degree
     if student.education_type_id:
         if db.query(EducationType).filter(EducationType.id == student.education_type_id).first() is None:
             raise HTTPException(status_code=400, detail="Invalid education type id")
@@ -214,7 +116,7 @@ def edit_student(student: StudentUpdate):
     db_student.graduation_date = student.graduation_date
     db_student.grade_1 = student.grade_1
     db_student.grade_2 = student.grade_2
-    db_student.payments = [payment.model_dump(mode='json') for payment in student.payments]
+    db_student.payments = [payment.model_dump(mode='json') for payment in student.payments] if student.payments else []
     db_student.theory_hours = student.theory_hours
     db_student.practice_hours = student.practice_hours
     db_student.status = student.status
@@ -222,3 +124,46 @@ def edit_student(student: StudentUpdate):
     db.commit()
     db.refresh(db_student)
     return db_student
+
+@app.get("/students/delete/{id}")
+def delete_student(id: int):
+    db = SessionLocal()
+    student = db.query(Student).filter(Student.id == id).first()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    db.delete(student)
+    db.commit()
+    return {"message": "Student deleted successfully"}
+
+
+@app.get("/students")
+def get_students():
+    db = SessionLocal()
+    students = db.query(Student).all()
+    return students
+
+@app.get("/students/{student_id}")
+def get_student(student_id: int):
+    db = SessionLocal()
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
+
+@app.get("/educations")
+def get_educations():
+    db = SessionLocal()
+    educations = db.query(Education).all()
+    return educations
+
+@app.get("/education_types")
+def get_education_types():
+    db = SessionLocal()
+    education_types = db.query(EducationType).all()
+    return education_types
+
+@app.get("/student_statuses")
+def get_student_statuses():
+    db = SessionLocal()
+    student_statuses = db.query(StudentStatus).all()
+    return student_statuses

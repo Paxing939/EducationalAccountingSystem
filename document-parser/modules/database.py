@@ -17,6 +17,19 @@ class Profession(Base):
     education_durations = Column(ARRAY(String), nullable=True)
     education_categories = Column(ARRAY(String))
     retraining_only = Column(Boolean, default=False)
+    advance_duration = Column(Float, nullable=True)
+    bondarenko = Column(String, nullable=True)
+    name_bel = Column(String, nullable=True)
+    has_google_link = Column(Boolean, default=False)
+    has_grades = Column(Boolean, default=False)
+    has_diary = Column(Boolean, default=False)
+
+class ProfessionsHours(Base):
+    __tablename__ = "professions_hours"
+    id = Column(Integer, primary_key=True, index=True)
+    duration = Column(Float, index=True)
+    theory_hours = Column(Integer, index=True)
+    practice_hours = Column(Integer, index=True)
 
 Base.metadata.create_all(bind=engine)
 
@@ -31,3 +44,10 @@ def get_profession(profession: Profession) -> Profession:
     result = db.query(Profession).filter(func.lower(Profession.name) == func.lower(profession.name.replace('ё', 'е'))).first()
     db.close()
     return result
+
+def add_hours(hours: list[ProfessionsHours]):
+    db = SessionLocal()
+    db.add_all(hours)
+    db.commit()
+    print(f"Added {len(hours)} entries to the database")
+
