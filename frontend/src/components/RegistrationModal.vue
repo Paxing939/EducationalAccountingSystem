@@ -124,7 +124,7 @@ export default defineComponent({
     
     onMounted(async () => {
       try {
-        var response = await fetch('http://localhost:8001/professions');
+        var response = await fetch('http://localhost:8000/professions');
         if (!response.ok) {
           throw new Error('Network response was not ok ' + response.statusText);
         }
@@ -143,7 +143,7 @@ export default defineComponent({
         education_types.value = await response.json();
         education_types_retraining_only.value = education_types.value.filter(type => type.id != 1 && type.id != 4);
 
-        response = await fetch('http://localhost:8001/professions_hours');
+        response = await fetch('http://localhost:8000/professions_hours');
         if (!response.ok) {
           throw new Error('Network response was not ok ' + response.statusText);
         }

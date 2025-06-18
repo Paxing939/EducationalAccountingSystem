@@ -133,8 +133,8 @@ export default defineComponent({
     const loadProfessions = async () => {
         try {
           const [professions_response, hours_response] = await Promise.all([
-            fetch('http://localhost:8001/professions'),
-            fetch('http://localhost:8001/professions_hours')
+            fetch('http://localhost:8000/professions'),
+            fetch('http://localhost:8000/professions_hours')
           ]);
           if (!professions_response.ok) {
             throw new Error('Network response was not ok ' + professions_response.statusText);
@@ -207,7 +207,7 @@ export default defineComponent({
                 }
                 delete entity.advance;
                 entity.comments = entity.comments ?? '';
-                const response = await fetch('http://localhost:8001/professions/edit', {
+                const response = await fetch('http://localhost:8000/professions/edit', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -189,7 +189,7 @@ export default defineComponent({
 
     const loadProfessions = async () => {
         try {
-          const response = await fetch('http://localhost:8001/professions');
+          const response = await fetch('http://localhost:8000/professions');
           if (!response.ok) {
             throw new Error('Network response was not ok ' + response.statusText);
           }
@@ -238,7 +238,7 @@ export default defineComponent({
 
     const loadProfessionCategories = async () => {
         try {
-            const response = await fetch('http://localhost:8001/professions');
+            const response = await fetch('http://localhost:8000/professions');
             if (!response.ok) {
                 throw new Error('Network response was not ok ' + response.statusText);
             }
@@ -257,7 +257,7 @@ export default defineComponent({
 
     const loadProfessionsHours = async () => {
         try {
-            const response = await fetch('http://localhost:8001/professions_hours');
+            const response = await fetch('http://localhost:8000/professions_hours');
             if (!response.ok) {
                 throw new Error('Network response was not ok ' + response.statusText);
             }
@@ -307,7 +307,7 @@ export default defineComponent({
         const item = items.value.find(item => item.id === student_id);
         if (item) {
             try {
-                const profession = await fetch(`http://localhost:8001/professions/${profession_id}`);
+                const profession = await fetch(`http://localhost:8000/professions/${profession_id}`);
                 if (!profession.ok) {
                     throw new Error('Network response was not ok ' + profession.statusText);
                 }
@@ -402,7 +402,7 @@ export default defineComponent({
         try {
             const item = items.value.find(item => item.id === id);
             if (item) {
-                const result = await fetch(`http://localhost:8001/professions/by/name/${item.profession}`);
+                const result = await fetch(`http://localhost:8000/professions/by/name/${item.profession}`);
                 if (!result.ok) {
                     throw new Error('Network response was not ok ' + result.statusText);
                 }

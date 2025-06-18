@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from schemas.students import *
 from models.students import *
+from models.professions import *
 import requests
 import re
 
@@ -167,3 +168,6 @@ def get_student_statuses():
     db = SessionLocal()
     student_statuses = db.query(StudentStatus).all()
     return student_statuses
+
+
+import professions_service
